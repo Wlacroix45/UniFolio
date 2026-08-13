@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\Admin\Trait;
 
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -22,6 +23,7 @@ trait DupliquerTrait
     /**
      * Méthode publique pour la duplication (appelée par EasyAdmin).
      */
+    #[AdminRoute(path: '/{entityId}/duplicate', name: 'duplicate')]
     public function duplicateEntity(AdminContext $context, EntityManagerInterface $entityManager)
     {
         $newEntity = $this->duplicateEntityBase($context, $entityManager);
