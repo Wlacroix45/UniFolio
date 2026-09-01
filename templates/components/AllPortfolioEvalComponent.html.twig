@@ -9,15 +9,6 @@
 
     <div class="row">
         <div class="filtre-btn col-12">
-            {# ✅ Bouton "Tous les semestres" : désactivé quand aucun semestre sélectionné #}
-            <button class="btn btn-primary"
-                    data-action="live#action"
-                    data-live-action-param="changeSemestre"
-                    data-live-id-param="0"
-                    {{ this.selectedSemestreId == null ? 'disabled' : '' }}
-            >Tous les semestres</button>
-
-            {# ✅ Bouton par semestre : désactivé si c'est le semestre actuellement sélectionné #}
             {% for semestre in semestres %}
                 <button class="btn btn-primary"
                         data-action="live#action"
@@ -212,7 +203,6 @@
             </div>
         </div>
     </div>
-
     <div class="row">
         {% for portfolioId in this.allPortfolios %}
             {{ component('PortfolioEvalCardComponent', {'id': portfolioId, 'key': portfolioId}) }}

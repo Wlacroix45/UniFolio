@@ -167,8 +167,23 @@ class AllPortfolioEvalComponent extends BaseController
         $this->etudiants = $this->uniqueEntities($this->etudiants);
     }
 
+    private function getFirstSemestreId(): ?int
+    {
+        foreach ($this->semestres as $semestre) {
+            if ($semestre instanceof Semestre && $semestre->getId() !== null) {
+                return (int) $semestre->getId();
+            }
+        }
+
+        return null;
+    }
+
     private function resolveSelectedSemestre(): void
     {
+        if ($this->selectedSemestreId === null) {
+            $this->selectedSemestreId = $this->getFirstSemestreId();
+        }
+
         if ($this->selectedSemestreId === null) {
             $this->selectedSemestre = null;
             return;
@@ -305,7 +320,8 @@ class AllPortfolioEvalComponent extends BaseController
         $this->currentPage = 1;
         $this->resetPortfoliosCache();
 
-        $this->selectedSemestreId = $id !== 0 ? $id : null;
+        $defaultSemestreId = $this->getFirstSemestreId();
+        $this->selectedSemestreId = $id !== 0 ? $id : $defaultSemestreId;
         $this->resolveSelectedSemestre();
 
         $competences = $this->getCompetencesForCurrentDepartement();

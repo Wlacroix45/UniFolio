@@ -165,8 +165,23 @@ final class AllTraceEvalComponent extends BaseController
         $this->etudiants = $this->uniqueEntities($this->etudiants);
     }
 
+    private function getFirstSemestreId(): ?int
+    {
+        foreach ($this->semestres as $semestre) {
+            if ($semestre instanceof Semestre && $semestre->getId() !== null) {
+                return (int) $semestre->getId();
+            }
+        }
+
+        return null;
+    }
+
     private function resolveSelectedSemestre(): void
     {
+        if ($this->selectedSemestreId === null) {
+            $this->selectedSemestreId = $this->getFirstSemestreId();
+        }
+
         if ($this->selectedSemestreId === null) {
             $this->selectedSemestre = null;
             return;
@@ -422,12 +437,14 @@ final class AllTraceEvalComponent extends BaseController
         $this->currentPage = 1;
         $this->resetTracesCache();
 
+        $defaultSemestreId = $this->getFirstSemestreId();
+
         if ($id !== null && $id !== 0) {
             $this->selectedSemestreId = $id;
             $this->selectedSemestre = $this->semestreRepository->find($id);
         } else {
-            $this->selectedSemestreId = null;
-            $this->selectedSemestre = null;
+            $this->selectedSemestreId = $defaultSemestreId;
+            $this->selectedSemestre = $defaultSemestreId !== null ? $this->semestreRepository->find($defaultSemestreId) : null;
         }
 
         $competences = $this->getCompetencesForCurrentDepartement();
@@ -562,6 +579,8 @@ final class AllTraceEvalComponent extends BaseController
             return $this->allTraceIdsCache;
         }
 
+        $anneeId = $this->selectedSemestre?->getAnnee()?->getId();
+
         $traceIds = $this->traceRepository->findIdsByFilters(
             $dept,
             $this->selectedSemestre,
@@ -570,7 +589,8 @@ final class AllTraceEvalComponent extends BaseController
             $this->selectedEtudiants,
             $this->selectedEtat,
             $this->itemsPerPage,
-            $offset
+            $offset,
+            $anneeId
         );
 
         if ($traceIds == null) {
@@ -598,13 +618,15 @@ final class AllTraceEvalComponent extends BaseController
             return 0;
         }
 
+        $anneeId = $this->selectedSemestre?->getAnnee()?->getId();
         $this->totalTracesCache = $this->traceRepository->countByFilters(
             $dept,
             $this->selectedSemestre,
             $this->selectedCompetences,
             $this->selectedGroupes,
             $this->selectedEtudiants,
-            $this->selectedEtat
+            $this->selectedEtat,
+            $anneeId
         );
         $this->totalTracesCacheKey = $cacheKey;
 

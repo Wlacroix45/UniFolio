@@ -9,13 +9,6 @@
     </div>
     <div class="row">
         <div class="filtre-btn col-12">
-            <button class="btn btn-primary"
-                    data-action="live#action"
-                    data-live-action-param="changeSemestre"
-                    data-live-id-param="0"
-                    {{ this.selectedSemestreId == null ? 'disabled' : '' }}
-            >Tous les semestres</button>
-
             {% for semestre in semestres %}
                 <button class="btn btn-primary"
                         data-action="live#action"

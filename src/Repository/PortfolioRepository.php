@@ -100,6 +100,12 @@ class PortfolioRepository extends ServiceEntityRepository
         if (!empty($semestre)) {
             $qb->andWhere('s.id = :semestre')
                 ->setParameter('semestre', $semestre->getId());
+
+            $annee = $semestre->getAnnee();
+            if ($annee !== null) {
+                $qb->andWhere('p.annee = :annee')
+                    ->setParameter('annee', $annee);
+            }
         }
         if (!empty($groupes)) {
             $qb->andWhere('g.id IN (:groupes)')
