@@ -56,6 +56,11 @@
                                 : {{ this.trace.datemodification is empty ? '-' : this.trace.datemodification|date('d-m-Y H:i') }}
                             </li>
                         </ul>
+                        <ul class="card-infos-min">
+                            <li><span>Conception IA :&nbsp;</span> {{ this.trace.conceptionIa ? this.trace.conceptionIa.libelle : '-' }}</li>
+                            <li>•</li>
+                            <li><span>Réalisation IA :&nbsp;</span> {{ this.trace.realisationIa ? this.trace.realisationIa.libelle : '-' }}</li>
+                        </ul>
                         <hr>
 
                         <ul class="dashboard-competences">

@@ -385,22 +385,38 @@ class UserSynchro extends AbstractController
             $login = $etudiant->getUsername();
 
             if ($login !== 'etudiant') {
-                $response = $client->request(
-                    'GET',
-                    $_ENV['API_URL'] . 'unifolio/etudiant',
-                    [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Content-Type' => 'application/json',
-                            'x-api-key' => $this->getParameter('api_key')
-                        ],
-                        'query' => [
-                            'username' => $login
+                try {
+                    $response = $client->request(
+                        'GET',
+                        $_ENV['API_URL'] . 'unifolio/etudiant',
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Content-Type' => 'application/json',
+                                'x-api-key' => $this->getParameter('api_key')
+                            ],
+                            'query' => [
+                                'username' => $login
+                            ]
                         ]
-                    ]
-                );
+                    );
 
-                $response = $response->toArray();
+                    $status = $response->getStatusCode();
+                    $content = $response->getContent(false); // don't throw on non-2xx
+
+                    if ($status >= 200 && $status < 300) {
+                        $response = $response->toArray();
+                    } else {
+                        $this->addFlash('danger', sprintf('Erreur API (%d) pour %s : %s', $status, $login, substr($content, 0, 200)));
+                        continue;
+                    }
+                } catch (\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+                    $this->addFlash('danger', 'Erreur de connexion à l\'API pour ' . $login . ' : ' . $e->getMessage());
+                    continue;
+                } catch (\Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface $e) {
+                    $this->addFlash('danger', 'Erreur HTTP lors de la requête API pour ' . $login . ' : ' . $e->getMessage());
+                    continue;
+                }
 
                 if (in_array($login, array_column($response, 'username'))) {
                     $etudiantSelected = array_filter($response, function ($etudiantSelected) use ($login) {

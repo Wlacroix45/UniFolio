@@ -24,6 +24,11 @@
                         <li>•</li>
                         <li><span>Contexte :&nbsp;</span> {{ trace.contexte }}</li>
                     </ul>
+                    <ul>
+                        <li><span>Conception IA :&nbsp;</span> {{ trace.conceptionIa ? trace.conceptionIa.libelle : '-' }}</li>
+                        <li>•</li>
+                        <li><span>Réalisation IA :&nbsp;</span> {{ trace.realisationIa ? trace.realisationIa.libelle : '-' }}</li>
+                    </ul>
                 </div>
                 {% if 'TraceTypeImage' in trace.typeTrace %}
                     <figure>

@@ -8,6 +8,8 @@
 namespace App\Entity;
 
 use AllowDynamicProperties;
+use App\Enum\ConceptionIaEnum;
+use App\Enum\RealisationIaEnum;
 use App\Repository\TraceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -67,6 +69,12 @@ class Trace
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $contexte = null;
+
+    #[ORM\Column(type: Types::SMALLINT, enumType: ConceptionIaEnum::class)]
+    private ConceptionIaEnum $conception_ia = ConceptionIaEnum::NON_RENSEIGNE;
+
+    #[ORM\Column(type: Types::SMALLINT, enumType: RealisationIaEnum::class)]
+    private RealisationIaEnum $realisation_ia = RealisationIaEnum::NON_RENSEIGNE;
 
     /**
      * @return OrdreTrace|null
@@ -321,5 +329,25 @@ class Trace
         $this->contexte = $contexte;
 
         return $this;
+    }
+
+    public function getConceptionIa(): ConceptionIaEnum
+    {
+        return $this->conception_ia;
+    }
+
+    public function setConceptionIa(ConceptionIaEnum $conception_ia): void
+    {
+        $this->conception_ia = $conception_ia;
+    }
+
+    public function getRealisationIa(): RealisationIaEnum
+    {
+        return $this->realisation_ia;
+    }
+
+    public function setRealisationIa(RealisationIaEnum $realisation_ia): void
+    {
+        $this->realisation_ia = $realisation_ia;
     }
 }

@@ -8,6 +8,8 @@
 namespace App\Components\Trace\Form;
 
 use App\Entity\Trace;
+use App\Enum\ConceptionIaEnum;
+use App\Enum\RealisationIaEnum;
 use App\Repository\BibliothequeRepository;
 use App\Repository\TraceRepository;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -24,7 +26,6 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Count;
 use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -161,6 +162,42 @@ class TraceTypeImageType extends AbstractType
 //                'required' => true,
                 'expanded' => true,
                 'mapped' => false,
+                'attr' => [
+                    'class' => "form-check"
+                ],
+            ])
+            //----------------------------------------------------------------
+            ->add('conception_ia', ChoiceType::class, [
+                'constraints' => [
+                    new NotNull(message: 'Veuillez sélectionner une réponse'),
+                ],
+                'choices' => array_combine(
+                    array_map(fn($e) => $e->getLibelle(), array_filter(ConceptionIaEnum::cases(), fn($e) => $e !== ConceptionIaEnum::NON_RENSEIGNE)),
+                    array_filter(ConceptionIaEnum::cases(), fn($e) => $e !== ConceptionIaEnum::NON_RENSEIGNE)
+                ),
+                'label' => 'Utilisation de l\'IA générative lors de la conception',
+                'multiple' => false,
+                'required' => true,
+                'expanded' => true,
+                'mapped' => true,
+                'attr' => [
+                    'class' => "form-check"
+                ],
+            ])
+            //----------------------------------------------------------------
+            ->add('realisation_ia', ChoiceType::class, [
+                'constraints' => [
+                    new NotNull(message: 'Veuillez sélectionner une réponse'),
+                ],
+                'choices' => array_combine(
+                    array_map(fn($e) => $e->getLibelle(), array_filter(RealisationIaEnum::cases(), fn($e) => $e !== RealisationIaEnum::NON_RENSEIGNE)),
+                    array_filter(RealisationIaEnum::cases(), fn($e) => $e !== RealisationIaEnum::NON_RENSEIGNE)
+                ),
+                'label' => 'Utilisation de l\'IA générative lors de la réalisation',
+                'multiple' => false,
+                'required' => true,
+                'expanded' => true,
+                'mapped' => true,
                 'attr' => [
                     'class' => "form-check"
                 ],
