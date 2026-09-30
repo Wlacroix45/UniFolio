@@ -2,11 +2,12 @@ security:
   # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
   password_hashers:
     App\Entity\Users: 'auto'
+    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
   role_hierarchy:
     ROLE_ADMIN: [ ROLE_USER, ROLE_ALLOWED_TO_SWITCH ]
 
-    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    
   # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
   providers:
     # used to reload user from session & other features (e.g. switch_user)
