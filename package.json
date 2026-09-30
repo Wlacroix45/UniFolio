@@ -29,7 +29,7 @@
         "build": "encore production --progress"
     },
     "dependencies": {
-        "@fortawesome/fontawesome-pro": "^6.4.2",
+        "@fortawesome/fontawesome-free": "^7.3.1",
         "@hotwired/turbo": "^7.3.0",
         "@symfony/stimulus-bridge": "^3.2.2",
         "datatables.net-dt": "^1.13.11",
