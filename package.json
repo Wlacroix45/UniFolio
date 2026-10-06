@@ -18,7 +18,10 @@
         "webpack-notifier": "^1.15.0"
     },
     "license": "MPL-2.0",
-    "author": "Cyndel Herolt",
+    "author": "team unifolio",
+    "maintainers": [
+        "la team"
+    ],
     "name": "unifolio",
     "private": true,
     "scripts": {
