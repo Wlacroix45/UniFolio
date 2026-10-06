@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: unifolio-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: unifolio
+      MYSQL_USER: unifolio_user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: unifolio-app
+    restart: always
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: mysql://unifolio_user:userpassword@db:3306/unifolio?serverVersion=8.0&charset=utf8mb4
+    ports:
+      - "8000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
