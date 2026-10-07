@@ -1,24 +1,30 @@
 {
     "devDependencies": {
-        "@babel/core": "^7.17.0",
-        "@babel/preset-env": "^7.16.0",
+        "@babel/core": "^8.0.7",
+        "@babel/preset-env": "^8.0.7",
         "@hotwired/stimulus": "^3.0.0",
         "@popperjs/core": "^2.11.6",
         "@symfony/ux-live-component": "file:vendor/symfony/ux-live-component/assets",
-        "@symfony/webpack-encore": "^4.0.0",
+        "@symfony/webpack-encore": "^7.2.0",
         "bootstrap": "^5.3.8",
         "core-js": "^3.23.0",
         "file-loader": "^6.2.0",
         "jquery": "^3.7.1",
         "regenerator-runtime": "^0.13.9",
         "sass": "^1.98.0",
-        "sass-loader": "^13.2.0",
+        "sass-loader": "^17.0.1",
         "webpack": "^5.76.1",
-        "webpack-cli": "^4.10.0",
-        "webpack-notifier": "^1.15.0"
+        "webpack-cli": "^7.2.3",
+        "webpack-notifier": "^1.17.0"
+    },
+    "overrides": {
+        "uuid": "^11.1.1"
     },
     "license": "MPL-2.0",
-    "author": "Cyndel Herolt",
+    "author": "team unifolio",
+    "maintainers": [
+        "la team"
+    ],
     "name": "unifolio",
     "private": true,
     "scripts": {
@@ -30,7 +36,7 @@
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.3.1",
-        "@hotwired/turbo": "^7.3.0",
+        "@hotwired/turbo": "^8.0.23",
         "@symfony/stimulus-bridge": "^3.2.2",
         "datatables.net-dt": "^1.13.11",
         "highlight.js": "^11.8.0",
