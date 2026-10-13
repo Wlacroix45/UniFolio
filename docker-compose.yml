@@ -25,7 +25,9 @@ services:
     container_name: unifolio-app
     restart: always
     environment:
+    # TODO: mettre les variables d'environnement github quand la ci sera prête
       APP_ENV: dev
+      APP_SECRET: 7c541dd4ff2d2adff2aa62f7cf4ea4f9
       DATABASE_URL: mysql://unifolio_user:userpassword@db:3306/unifolio?serverVersion=8.0&charset=utf8mb4
     ports:
       - "8000:80"
