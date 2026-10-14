@@ -42,9 +42,12 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v4
-        with: 
-          node-version: '22'
+        with:
+          node-version: '22.18.0'
           cache: npm
+
+      - name: Utiliser une version stable de NPM
+        run: npm install --global npm@10.9.3
 
       - name: Installer les dépendances NPM
         run: npm ci
@@ -74,8 +77,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.18.0'
           cache: npm
+
+      - name: Utiliser une version stable de NPM
+        run: npm install --global npm@10.9.3
 
       - name: Audit de sécurité NPM
         run: npm audit --audit-level=high
