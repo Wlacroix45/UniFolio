@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [feat/ci]
+  pull_request:
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, fileinfo, iconv, pdo_sqlite
+          tools: composer:v2
+
+      - name: Obtenir le cache Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Installer les dépendances PHP
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Vérifier la syntaxe PHP (dossier src)
+        run: find src -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Vérifier la syntaxe Twig (dossier templates)
+        run: php bin/console lint:twig templates
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: 
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances NPM
+        run: npm ci
+
+      - name: Construire les assets Webpack
+        run: npm run build
+
+
+  securite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Installer les dépendances PHP
+        run: composer install --no-progress --prefer-dist --no-interaction --no-scripts
+
+      - name: Audit de sécurité PHP (Composer)
+        run: composer audit --locked
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Audit de sécurité NPM
+        run: npm audit --audit-level=high
+
+      - name: Scan de sécurité du code (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
