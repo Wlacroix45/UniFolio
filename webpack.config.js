@@ -66,10 +66,15 @@ Encore
     //     config.plugins.push('@babel/a-babel-plugin');
     // })
 
-    // enables and configure @babel/preset-env polyfills
-    .configureBabelPresetEnv((config) => {
-        config.useBuiltIns = 'usage';
-        config.corejs = '3.23';
+    // Babel 8 no longer supports preset-env's useBuiltIns/corejs options.
+    .configureBabel((config) => {
+        config.plugins.push([
+            'babel-plugin-polyfill-corejs3',
+            {
+                method: 'usage-global',
+                version: '3.23'
+            }
+        ]);
     })
 
     // enables Sass/SCSS support
