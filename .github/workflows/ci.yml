@@ -17,7 +17,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: ctype, fileinfo, iconv, pdo_sqlite
-          tools: composer:v2
+          tools: composer:v2, phpstan
 
       - name: Obtenir le cache Composer
         id: composer-cache
@@ -36,6 +36,12 @@ jobs:
 
       - name: Vérifier la syntaxe PHP (dossier src)
         run: find src -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Vérifier le style du code PHP (PSR-12)
+        run: vendor/bin/phpcs --standard=PSR12 --extensions=php src
+
+      - name: Analyse statique de la qualité du code (PHPStan)
+        run: phpstan analyse src --level=1 --no-progress --memory-limit=1G
 
       - name: Vérifier la syntaxe Twig (dossier templates)
         run: php bin/console lint:twig templates
@@ -87,7 +93,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Scan de sécurité du code (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
