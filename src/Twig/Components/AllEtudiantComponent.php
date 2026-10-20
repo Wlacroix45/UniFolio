@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
  * @author cyndelherolt
@@ -43,6 +44,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
+
 use function PHPUnit\Framework\isEmpty;
 
 #[AsLiveComponent('AllEtudiantComponent')]
@@ -102,29 +104,28 @@ class AllEtudiantComponent extends BaseController
     public array $allEtudiants = [];
 
     public function __construct(
-        protected PortfolioRepository             $portfolioRepository,
-        protected DepartementRepository           $departementRepository,
-        protected ApcNiveauRepository             $apcNiveauRepository,
-        protected EtudiantRepository              $etudiantRepository,
-        protected GroupeRepository                $groupeRepository,
-        protected SemestreRepository              $semestreRepository,
-        protected AnneeRepository                 $anneeRepository,
-        protected TypeGroupeRepository            $typeGroupeRepository,
-        protected ValidationRepository            $validationRepository,
-        protected CommentaireRepository           $commentaireRepository,
-        protected CompetenceRepository            $competenceRepository,
-        protected OrdreTraceRepository            $ordreTraceRepository,
-        protected OrdrePageRepository             $ordrePageRepository,
-        protected TraceRepository                 $traceRepository,
+        protected PortfolioRepository $portfolioRepository,
+        protected DepartementRepository $departementRepository,
+        protected ApcNiveauRepository $apcNiveauRepository,
+        protected EtudiantRepository $etudiantRepository,
+        protected GroupeRepository $groupeRepository,
+        protected SemestreRepository $semestreRepository,
+        protected AnneeRepository $anneeRepository,
+        protected TypeGroupeRepository $typeGroupeRepository,
+        protected ValidationRepository $validationRepository,
+        protected CommentaireRepository $commentaireRepository,
+        protected CompetenceRepository $competenceRepository,
+        protected OrdreTraceRepository $ordreTraceRepository,
+        protected OrdrePageRepository $ordrePageRepository,
+        protected TraceRepository $traceRepository,
         protected EnseignantDepartementRepository $enseignantDepartementRepository,
-        #[Required] public Security               $security,
-        RequestStack                              $requestStack,
-        private FormFactoryInterface              $formFactory,
-        protected DataUserSession                 $dataUserSession,
-        HttpClientInterface                       $client,
-        MailerInterface                           $mailer,
-    )
-    {
+        #[Required] public Security $security,
+        RequestStack $requestStack,
+        private FormFactoryInterface $formFactory,
+        protected DataUserSession $dataUserSession,
+        HttpClientInterface $client,
+        MailerInterface $mailer,
+    ) {
         $this->client = $client;
         $this->mailer = $mailer;
         $this->requestStack = $requestStack;
@@ -468,7 +469,6 @@ class AllEtudiantComponent extends BaseController
             $semestres = $this->semestreRepository->findBy(['id' => $this->semestres]);
         }
         foreach ($semestres as $semestre) {
-
             $response = $this->client->request(
                 'GET',
                 $_ENV['API_URL'] . 'unifolio/etudiant',
@@ -491,7 +491,6 @@ class AllEtudiantComponent extends BaseController
                     $this->etudiantsNonInscrits[] = $etudiantAPI;
                 }
             }
-
         }
     }
 

@@ -1,0 +1,511 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$allDepartements\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$enseignant\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$groupes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$requestStack\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$typesGroupes\.$#'
+			identifier: property.notFound
+			count: 4
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Constructor of class App\\Classes\\DataUserSession has an unused parameter \$entityManager\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Constructor of class App\\Classes\\DataUserSession has an unused parameter \$eventDispatcher\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Variable \$etudiants might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Variable \$notifications might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Classes/DataUserSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Components\\Trace\\AllTraceComponent\:\:\$requestStack\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Components/Trace/AllTraceComponent.php
+
+		-
+			message: '#^Variable \$competence in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Components/Trace/AllTraceComponent.php
+
+		-
+			message: '#^Variable \$competencesNiveaux might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Components/Trace/AllTraceComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Components\\Trace\\TypeTrace\\TraceTypeImage\:\:\$type_trace\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Components/Trace/TypeTrace/TraceTypeImage.php
+
+		-
+			message: '#^Access to an undefined property App\\Components\\Trace\\TypeTrace\\TraceTypeLien\:\:\$type_trace\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Components/Trace/TypeTrace/TraceTypeLien.php
+
+		-
+			message: '#^Access to an undefined property App\\Components\\Trace\\TypeTrace\\TraceTypePdf\:\:\$type_trace\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Components/Trace/TypeTrace/TraceTypePdf.php
+
+		-
+			message: '#^Access to an undefined property App\\Components\\Trace\\TypeTrace\\TraceTypeVideo\:\:\$type_trace\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Components/Trace/TypeTrace/TraceTypeVideo.php
+
+		-
+			message: '#^Call to an undefined static method EasyCorp\\Bundle\\EasyAdminBundle\\Field\\FormField\:\:addPanel\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/Controller/Admin/EnseignantCrudController.php
+
+		-
+			message: '#^Call to an undefined static method EasyCorp\\Bundle\\EasyAdminBundle\\Field\\FormField\:\:addPanel\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/Controller/Admin/UsersCrudController.php
+
+		-
+			message: '#^Constructor of class App\\Controller\\DashboardEtudiantController has an unused parameter \$departementRepository\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Controller/DashboardEtudiantController.php
+
+		-
+			message: '#^Constructor of class App\\Controller\\DashboardEtudiantController has an unused parameter \$enseignantRepository\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Controller/DashboardEtudiantController.php
+
+		-
+			message: '#^Constructor of class App\\Controller\\DashboardEtudiantController has an unused parameter \$requestStack\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Controller/DashboardEtudiantController.php
+
+		-
+			message: '#^Constructor of class App\\Controller\\DashboardEtudiantController has an unused parameter \$tokenStorage\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Controller/DashboardEtudiantController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\NotificationController\:\:\$commentaireRepository\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\NotificationController\:\:\$dataUserSession\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\NotificationController\:\:\$notificationRepository\.$#'
+			identifier: property.notFound
+			count: 11
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\NotificationController\:\:\$portfolioRepository\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\NotificationController\:\:\$traceRepository\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Variable \$notifications might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Variable \$portfolio on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Variable \$trace on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\PortfolioController\:\:\$commentForm\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Access to an undefined property App\\Controller\\PortfolioController\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Constructor of class App\\Controller\\PortfolioController has an unused parameter \$dataUserSession\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Variable \$data_user on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Variable \$parcours might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Variable \$step on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Variable \$validations on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioController.php
+
+		-
+			message: '#^Variable \$competencesNiveau might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$cvs on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$error on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$liste on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$ordreMaxTrace on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$ordreMinTrace on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$pages on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$typesTrace on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Controller/PortfolioProcessController.php
+
+		-
+			message: '#^Variable \$bio might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Variable \$email_perso might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Variable \$email_univ might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Variable \$nom might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Variable \$prenom might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Variable \$tel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#4 \$token \(string\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: src/Controller/ResetPasswordController.php
+
+		-
+			message: '#^Variable \$userInfos might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/ResetPasswordController.php
+
+		-
+			message: '#^Variable \$mailEnseignant might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/SynchroIntranet/UserSynchro.php
+
+		-
+			message: '#^Variable \$mailEtudiant might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Controller/SynchroIntranet/UserSynchro.php
+
+		-
+			message: '#^Variable \$competencesNiveau might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: src/Controller/TraceController.php
+
+		-
+			message: '#^Variable \$apcParcours might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/DataFixtures/GroupeFixture.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\Competence\:\:\$validations\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Entity/Competence.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\Departement\:\:\$enseignants\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Entity/Departement.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\EnseignantDepartement\:\:\$annee\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Entity/EnseignantDepartement.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\EnseignantDepartement\:\:\$roles\.$#'
+			identifier: property.notFound
+			count: 5
+			path: src/Entity/EnseignantDepartement.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\Page\:\:\$pageTraces\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Entity/Page.php
+
+		-
+			message: '#^Access to an undefined property App\\Entity\\Portfolio\:\:\$pagePortfolios\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Entity/Portfolio.php
+
+		-
+			message: '#^Variable \$etudiantSearch might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/EventSubscriber/CommentaireSubscriber.php
+
+		-
+			message: '#^Access to an undefined property App\\Repository\\EnseignantDepartementRepository\:\:\$_em\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Repository/EnseignantDepartementRepository.php
+
+		-
+			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
+			identifier: classConstant.notFound
+			count: 4
+			path: src/Repository/EnseignantDepartementRepository.php
+
+		-
+			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:DESC\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: src/Repository/EnseignantDepartementRepository.php
+
+		-
+			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
+			identifier: classConstant.notFound
+			count: 5
+			path: src/Repository/EtudiantRepository.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#2 \$semestre \(App\\Entity\\Semestre\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: src/Repository/EtudiantRepository.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#6 \$etat \(int\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: src/Repository/EtudiantRepository.php
+
+		-
+			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: src/Repository/GroupeRepository.php
+
+		-
+			message: '#^Class App\\Entity\\PortfolioPage not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/PortfolioPageRepository.php
+
+		-
+			message: '#^Parameter \$entity of method App\\Repository\\PortfolioPageRepository\:\:remove\(\) has invalid type App\\Entity\\PortfolioPage\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/PortfolioPageRepository.php
+
+		-
+			message: '#^Parameter \$entity of method App\\Repository\\PortfolioPageRepository\:\:save\(\) has invalid type App\\Entity\\PortfolioPage\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/PortfolioPageRepository.php
+
+		-
+			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: src/Repository/SemestreRepository.php
+
+		-
+			message: '#^Class App\\Entity\\TracePage not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/TracePageRepository.php
+
+		-
+			message: '#^Parameter \$entity of method App\\Repository\\TracePageRepository\:\:remove\(\) has invalid type App\\Entity\\TracePage\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/TracePageRepository.php
+
+		-
+			message: '#^Parameter \$entity of method App\\Repository\\TracePageRepository\:\:save\(\) has invalid type App\\Entity\\TracePage\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Repository/TracePageRepository.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$annees\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$client\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$etudiants\.$#'
+			identifier: property.notFound
+			count: 4
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$mailer\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$requestStack\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$semestres\.$#'
+			identifier: property.notFound
+			count: 6
+			path: src/Twig/Components/AllEtudiantComponent.php
+
+		-
+			message: '#^Access to an undefined property App\\Twig\\Components\\PortfolioEvalTableComponent\:\:\$portfolio\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Twig/Components/PortfolioEvalTableComponent.php
