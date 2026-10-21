@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Admin\Trait;
 
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;

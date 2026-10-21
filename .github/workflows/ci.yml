@@ -2,29 +2,29 @@ name: CI
 
 on:
   push:
-    branches: [feat/ci]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build-and-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout du code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           extensions: ctype, fileinfo, iconv, pdo_sqlite
-          tools: composer:v2
+          tools: composer:v2, phpstan
 
       - name: Obtenir le cache Composer
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -37,14 +37,23 @@ jobs:
       - name: Vérifier la syntaxe PHP (dossier src)
         run: find src -name "*.php" -print0 | xargs -0 -n1 php -l
 
+      - name: Vérifier le style du code PHP (PSR-12)
+        run: vendor/bin/phpcs --standard=PSR12 --extensions=php --warning-severity=0 --exclude=PSR1.Methods.CamelCapsMethodName src
+
+      - name: Analyse statique de la qualité du code (PHPStan)
+        run: phpstan analyse --no-progress --memory-limit=1G
+
       - name: Vérifier la syntaxe Twig (dossier templates)
         run: php bin/console lint:twig templates
 
       - name: Setup Node
-        uses: actions/setup-node@v4
-        with: 
-          node-version: '22'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22.18.0'
           cache: npm
+
+      - name: Utiliser une version stable de NPM
+        run: npm install --global npm@10.9.3
 
       - name: Installer les dépendances NPM
         run: npm ci
@@ -54,10 +63,10 @@ jobs:
 
 
   securite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout du code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -72,16 +81,19 @@ jobs:
         run: composer audit --locked
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '22.18.0'
           cache: npm
+
+      - name: Utiliser une version stable de NPM
+        run: npm install --global npm@10.9.3
 
       - name: Audit de sécurité NPM
         run: npm audit --audit-level=high
 
       - name: Scan de sécurité du code (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'

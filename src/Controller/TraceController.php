@@ -36,21 +36,19 @@ use Symfony\Contracts\Service\Attribute\Required;
 class TraceController extends BaseController
 {
     public function __construct(
-        protected TraceRepository     $traceRepository,
+        protected TraceRepository $traceRepository,
         public BibliothequeRepository $bibliothequeRepository,
-        public CompetenceRepository   $competenceRepository,
-        public ApcNiveauRepository    $apcNiveauRepository,
-        #[Required] public Security   $security
-    )
-    {
+        public CompetenceRepository $competenceRepository,
+        public ApcNiveauRepository $apcNiveauRepository,
+        #[Required] public Security $security
+    ) {
     }
 
     #[Route('/trace', name: 'app_trace')]
     public function index(
         TraceRegistry $traceRegistry,
-        Request       $request,
-    ): Response
-    {
+        Request $request,
+    ): Response {
 
         if ($this->isGranted('ROLE_ETUDIANT')) {
             $user = $this->security->getUser()->getEtudiant();
@@ -104,13 +102,12 @@ class TraceController extends BaseController
 
     #[Route('/trace/formulaire/{id}', name: 'app_trace_new')]
     public function new(
-        Request         $request,
+        Request $request,
         TraceRepository $traceRepository,
-        TraceRegistry   $traceRegistry,
-        Security        $security,
-        string          $id,
-    ): Response
-    {
+        TraceRegistry $traceRegistry,
+        Security $security,
+        string $id,
+    ): Response {
         if ($this->isGranted('ROLE_ETUDIANT')) {
             $data_user = $this->dataUserSession;
             //En fonction du paramètre (et donc du choix de type de trace), on récupère l'objet de la classe TraceTypeImage ou TraceTypeLien ou ... qui contient toutes les informations de ce type de trace (FORM, class, ICON, save...)
@@ -199,23 +196,21 @@ class TraceController extends BaseController
 
     #[Route('/trace/edit/{id}', name: 'app_trace_edit')]
     public function edit(
-        Request              $request,
-        TraceRepository      $traceRepository,
-        TraceRegistry        $traceRegistry,
-        ApcNiveauRepository  $apcNiveauRepository,
-        Security             $security,
-        int                  $id,
+        Request $request,
+        TraceRepository $traceRepository,
+        TraceRegistry $traceRegistry,
+        ApcNiveauRepository $apcNiveauRepository,
+        Security $security,
+        int $id,
         CompetenceRepository $competenceRepository,
         ValidationRepository $validationRepository,
-    ): Response
-    {
+    ): Response {
 
             $data_user = $this->dataUserSession;
             $trace = $traceRepository->find($id);
             $user = $security->getUser()->getEtudiant();
 
         if ($this->isGranted('ROLE_ETUDIANT') && $trace->getBibliotheque()->getEtudiant()->getId() == $user->getId()) {
-
 //            dump($trace->getBibliotheque()->getEtudiant()->getId());
 //            dump($user->getId());
 //            die();
@@ -402,19 +397,17 @@ class TraceController extends BaseController
     #[
         Route('/trace/delete/{id}', name: 'app_trace_delete')]
     public function delete(
-        Request              $request,
-        TraceRepository      $traceRepository,
+        Request $request,
+        TraceRepository $traceRepository,
         OrdreTraceRepository $ordreTraceRepository,
-        int                  $id,
-    ): Response
-    {
+        int $id,
+    ): Response {
 
             $trace = $traceRepository->find($id);
             $type = $trace->getTypetrace();
             $user = $this->security->getUser()->getEtudiant();
 
         if ($this->isGranted('ROLE_ETUDIANT') && $trace->getBibliotheque()->getEtudiant() == $user) {
-
             //Si la trace est de type image ou pdf, il faut supprimer le fichier
             if ($type == 'App\Components\Trace\TypeTrace\TraceTypeImage' || $type == 'App\Components\Trace\TypeTrace\TraceTypePdf') {
                 $document = $trace->getContenu();
@@ -439,11 +432,10 @@ class TraceController extends BaseController
 
     #[Route('/trace/show', name: 'app_trace_index')]
     public function indexShow(
-        Request                $request,
-        TraceRepository        $traceRepository,
+        Request $request,
+        TraceRepository $traceRepository,
         NotificationRepository $notificationRepository,
-    ): Response
-    {
+    ): Response {
         if ($this->isGranted('ROLE_ETUDIANT')) {
             $id = $request->query->get('id');
             $notificationId = $request->query->get('notification_id');

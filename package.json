@@ -2,9 +2,10 @@
     "devDependencies": {
         "@babel/core": "^8.0.7",
         "@babel/preset-env": "^8.0.7",
+        "babel-plugin-polyfill-corejs3": "^1.0.0",
         "@hotwired/stimulus": "^3.0.0",
         "@popperjs/core": "^2.11.6",
-        "@symfony/ux-live-component": "file:vendor/symfony/ux-live-component/assets",
+        "@symfony/ux-live-component": "^2.36.0",
         "@symfony/webpack-encore": "^7.2.0",
         "bootstrap": "^5.3.8",
         "core-js": "^3.23.0",

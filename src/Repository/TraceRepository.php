@@ -92,7 +92,7 @@ class TraceRepository extends ServiceEntityRepository
             ->setParameter('departement', $dept)
         ;
         if ($etat !== null) {
-            switch($etat) {
+            switch ($etat) {
                 case 0: // Toutes les traces
                     break;
                 case 1: // Traces évaluées
