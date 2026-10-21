@@ -499,6 +499,9 @@ class PortfolioProcessController extends BaseController
                         }
                     }
 
+                    $niveaux = [];
+                    $competencesNiveau = [];
+
                     if ($parcours === null) {
                         $referentiel = $dept->getApcReferentiels();
 
@@ -582,6 +585,9 @@ class PortfolioProcessController extends BaseController
                             $parcours = $g->getApcParcours();
                         }
                     }
+
+                    $niveaux = [];
+                    $competencesNiveau = [];
 
                     if ($parcours === null) {
                         $referentiel = $dept->getApcReferentiels();

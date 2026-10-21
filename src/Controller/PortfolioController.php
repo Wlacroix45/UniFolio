@@ -204,6 +204,9 @@ class PortfolioController extends BaseController
                         }
                     }
 
+                    $niveaux = [];
+                    $competencesNiveau = [];
+
                     if ($parcours === null) {
                         $referentiel = $dept->getApcReferentiels();
 

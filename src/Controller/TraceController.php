@@ -68,6 +68,9 @@ class TraceController extends BaseController
                 }
             }
 
+            $niveaux = [];
+            $competencesNiveau = [];
+
             if ($parcours === null) {
                 $referentiel = $dept->getApcReferentiels();
 
@@ -130,6 +133,9 @@ class TraceController extends BaseController
                     $parcours = $g->getApcParcours();
                 }
             }
+
+            $niveaux = [];
+            $competencesNiveau = [];
 
             if ($parcours === null) {
                 $referentiel = $dept->getApcReferentiels();
@@ -232,6 +238,9 @@ class TraceController extends BaseController
                     $parcours = $g->getApcParcours();
                 }
             }
+
+            $niveaux = [];
+            $competencesNiveau = [];
 
             if ($parcours === null) {
                 $referentiel = $dept->getApcReferentiels();
