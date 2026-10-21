@@ -11,7 +11,6 @@ use App\Entity\Departement;
 use App\Entity\Enseignant;
 use App\Entity\EnseignantDepartement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -39,7 +38,7 @@ class EnseignantDepartementRepository extends ServiceEntityRepository
             ->innerJoin(Departement::class, 'm', 'WITH', 'f.departement = m.id')
             ->where('f.enseignant = :enseignant')
             ->setParameter('enseignant', $user)
-            ->orderBy('m.libelle', Criteria::DESC)
+            ->orderBy('m.libelle', 'DESC')
             ->getQuery()
             ->getResult();
     }
@@ -87,8 +86,8 @@ class EnseignantDepartementRepository extends ServiceEntityRepository
             ->innerJoin(Enseignant::class, 'p', 'WITH', 'f.enseignant = p.id')
             ->where('f.departement = :departement')
             ->setParameter('departement', $departement)
-            ->orderBy('p.nom', Criteria::ASC)
-            ->addOrderBy('p.prenom', Criteria::ASC)
+            ->orderBy('p.nom', 'ASC')
+            ->addOrderBy('p.prenom', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -104,8 +103,8 @@ class EnseignantDepartementRepository extends ServiceEntityRepository
             ->andWhere('d.departement = :departement')
             ->setParameter('needle', '%' . $needle . '%')
             ->setParameter('departement', $departement->getId())
-            ->orderBy('p.nom', Criteria::ASC)
-            ->addOrderBy('p.prenom', Criteria::ASC)
+            ->orderBy('p.nom', 'ASC')
+            ->addOrderBy('p.prenom', 'ASC')
             ->getQuery()
             ->getResult();
 

@@ -15,7 +15,6 @@ use App\Entity\Groupe;
 use App\Entity\Semestre;
 use App\Entity\TypeGroupe;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -113,7 +112,7 @@ class GroupeRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('g')
             ->where('g.type_groupe = :type_groupe')
-            ->orderBy('g.ordre', Criteria::ASC)
+            ->orderBy('g.ordre', 'ASC')
             ->setParameter('type_groupe', $typegroupe)
             ->getQuery()
             ->getResult();
