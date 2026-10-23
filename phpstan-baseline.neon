@@ -223,12 +223,6 @@ parameters:
 			path: src/Controller/PortfolioController.php
 
 		-
-			message: '#^Variable \$competencesNiveau might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Controller/PortfolioProcessController.php
-
-		-
 			message: '#^Variable \$cvs on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
@@ -331,12 +325,6 @@ parameters:
 			path: src/Controller/SynchroIntranet/UserSynchro.php
 
 		-
-			message: '#^Variable \$competencesNiveau might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: src/Controller/TraceController.php
-
-		-
 			message: '#^Variable \$apcParcours might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -391,24 +379,6 @@ parameters:
 			path: src/Repository/EnseignantDepartementRepository.php
 
 		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 4
-			path: src/Repository/EnseignantDepartementRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:DESC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/EnseignantDepartementRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 5
-			path: src/Repository/EtudiantRepository.php
-
-		-
 			message: '#^Deprecated in PHP 8\.4\: Parameter \#2 \$semestre \(App\\Entity\\Semestre\) is implicitly nullable via default value null\.$#'
 			identifier: parameter.implicitlyNullable
 			count: 1
@@ -419,12 +389,6 @@ parameters:
 			identifier: parameter.implicitlyNullable
 			count: 1
 			path: src/Repository/EtudiantRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/GroupeRepository.php
 
 		-
 			message: '#^Class App\\Entity\\PortfolioPage not found\.$#'
@@ -443,12 +407,6 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: src/Repository/PortfolioPageRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/SemestreRepository.php
 
 		-
 			message: '#^Class App\\Entity\\TracePage not found\.$#'

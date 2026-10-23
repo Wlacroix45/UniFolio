@@ -223,7 +223,7 @@ class PortfolioController extends BaseController
                     }
 
                     // retire les doublons de la liste des compétences
-                    $competencesNiveau = array_unique($competencesNiveau ?? [], SORT_REGULAR);
+                    $competencesNiveau = array_unique($competencesNiveau, SORT_REGULAR);
                     break;
                 } else {
                     return $this->render('security/accessDenied.html.twig');
