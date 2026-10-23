@@ -138,3 +138,7 @@ L'application sera accessible à l'adresse : `http://localhost:8000`
 ## Licence
 
 [MPL-2.0](https://choosealicense.com/licenses/mpl-2.0/)
+
+## pour charger les csv import
+
+php bin/console app:import-users
