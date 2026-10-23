@@ -14,6 +14,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 class ApcNiveauCrudController extends AbstractCrudController
 {
     use DupliquerTrait;
+
     public static function getEntityFqcn(): string
     {
         return ApcNiveau::class;

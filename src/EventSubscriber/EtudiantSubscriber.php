@@ -1,4 +1,5 @@
 <?php
+
 namespace App\EventSubscriber;
 
 use App\Entity\Bibliotheque;
@@ -21,7 +22,8 @@ class EtudiantSubscriber implements EventSubscriberInterface
         private UserPasswordHasherInterface $passwordHasher,
         private EntityManagerInterface $entityManager,
         private SemestreRepository $semestreRepository,
-    ) {}
+    ) {
+    }
 
     public static function getSubscribedEvents(): array
     {

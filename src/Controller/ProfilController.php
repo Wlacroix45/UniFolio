@@ -29,8 +29,7 @@ class ProfilController extends BaseController
 {
     public function __construct(
         #[Required] public Security $security,
-    )
-    {
+    ) {
     }
 
     #[Route('/', name: 'app_profil')]
@@ -89,14 +88,13 @@ class ProfilController extends BaseController
 
     #[Route('/{id}/edit', name: 'app_profil_edit', methods: ['GET', 'POST'])]
     public function edit(
-        Request              $request,
-        ?Etudiant            $etudiant,
-        ?Enseignant          $enseignant,
-        EtudiantRepository   $etudiantRepository,
+        Request $request,
+        ?Etudiant $etudiant,
+        ?Enseignant $enseignant,
+        EtudiantRepository $etudiantRepository,
         EnseignantRepository $enseignantRepository,
-        ?int                 $id,
-    ): Response
-    {
+        ?int $id,
+    ): Response {
         $user = $this->security->getUser();
 
         if ($this->isGranted('ROLE_ETUDIANT')) {

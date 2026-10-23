@@ -87,7 +87,6 @@ class PortfolioProcessController extends BaseController
             $user = $security->getUser()->getEtudiant();
 
         if ($this->isGranted('ROLE_ETUDIANT') && $portfolio->getEtudiant() == $user) {
-
             $ordrePages = $ordrePageRepository->findBy(['portfolio' => $portfolio], ['ordre' => 'ASC']);
             $pages = [];
             foreach ($ordrePages as $ordrePage) {
