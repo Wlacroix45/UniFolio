@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Exception\ImportException;
 use App\Service\ImportUser;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -52,8 +53,10 @@ class ImportUsersCommand extends Command
         $status = Command::SUCCESS;
         foreach ($files as $file) {
             $io->section(basename($file));
-            if (1 !== $this->importUser->importerCsv($file)) {
-                $io->error("Échec de l'import, aucun utilisateur créé pour ce fichier.");
+            try {
+                $this->importUser->importerCsv($file);
+            } catch (ImportException $e) {
+                $io->error(sprintf('[%s] %s', $e->getType()->value, $e->getMessage()));
                 $status = Command::FAILURE;
                 continue;
             }
