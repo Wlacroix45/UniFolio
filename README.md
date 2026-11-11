@@ -127,6 +127,32 @@ L'application sera accessible à l'adresse : `http://localhost:8000`
 - Personnalisation des compétences et projets
 - Interface d'administration
 
+## import des utilisateurs
+
+```bash
+php bin/console app:import-users -p import_csv/exemple_utilisateurs.csv
+php bin/console app:import-users --export=identifiants.csv
+php bin/console app:import-users -p import_csv/exemple_utilisateurs.csv --export=identifiants.csv
+
+```
+
+colonnes requises : nom, prenom, mail. role en option.
+
+--export ecrit les identifiants crees dans un csv : nom, prenom, username, password.
+
+## tests
+
+```bash
+vendor/bin/phpunit
+```
+
+## couverture
+
+```bash
+sudo apt install php-xdebug
+XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-filter src/Service --coverage-filter src/Exception
+```
+
 ## Auteurs
 
 - [Cyndel Herolt](https://github.com/CyndelHerolt)
@@ -138,7 +164,3 @@ L'application sera accessible à l'adresse : `http://localhost:8000`
 ## Licence
 
 [MPL-2.0](https://choosealicense.com/licenses/mpl-2.0/)
-
-## pour charger les csv import
-
-php bin/console app:import-users

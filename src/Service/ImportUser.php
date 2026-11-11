@@ -5,6 +5,8 @@ namespace App\Service;
 use App\Entity\Enseignant;
 use App\Entity\Etudiant;
 use App\Entity\Users;
+use App\Exception\ImportErrorType;
+use App\Exception\ImportException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
@@ -21,29 +23,32 @@ class ImportUser
     ) {
     }
 
-    public function importerCsv(string $path): int
+    public function importerCsv(string $path, ?\Closure $onStart = null, ?\Closure $onProgress = null): void
     {
         $this->created = [];
 
         try {
             $rows = $this->lireCsv($path);
 
+            $onStart?->__invoke(count($rows));
+
             $this->entityManager->beginTransaction();
             $usernames = [];
             foreach ($rows as $row) {
                 $this->creerUtilisateur($row, $usernames);
+                $onProgress?->__invoke();
             }
             $this->entityManager->flush();
             $this->entityManager->commit();
-
-            return 1;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             if ($this->entityManager->getConnection()->isTransactionActive()) {
                 $this->entityManager->rollback();
             }
             $this->created = [];
 
-            return 0;
+            throw $e instanceof ImportException
+                ? $e
+                : new ImportException(ImportErrorType::ImportEchoue, "L'import a échoué, aucun utilisateur créé.", $e);
         }
     }
 
@@ -63,7 +68,7 @@ class ImportUser
     private function lireCsv(string $path): array
     {
         if (!is_readable($path)) {
-            throw new \RuntimeException(sprintf('Fichier illisible : %s', $path));
+            throw new ImportException(ImportErrorType::FichierIllisible, sprintf('Fichier illisible : %s', $path));
         }
 
         $handle = fopen($path, 'r');
@@ -75,7 +80,7 @@ class ImportUser
         foreach (['nom', 'prenom', 'mail'] as $required) {
             if (!in_array($required, $header, true)) {
                 fclose($handle);
-                throw new \RuntimeException(sprintf('Colonne manquante : %s', $required));
+                throw new ImportException(ImportErrorType::ColonneManquante, sprintf('Colonne manquante : %s', $required));
             }
         }
 
@@ -118,7 +123,7 @@ class ImportUser
         $prenom = $row['prenom'];
         $mail = $row['mail'];
         if ('' === $nom || '' === $prenom || '' === $mail) {
-            throw new \RuntimeException('Ligne incomplète (nom, prénom ou mail vide).');
+            throw new ImportException(ImportErrorType::LigneIncomplete, 'Ligne incomplète (nom, prénom ou mail vide).');
         }
 
         $isStudent = $this->estEtudiant($row);
@@ -145,7 +150,7 @@ class ImportUser
         }
 
         $this->entityManager->persist($user);
-        $this->created[] = ['username' => $username, 'password' => $plain];
+        $this->created[] = ['nom' => $nom, 'prenom' => $prenom, 'username' => $username, 'password' => $plain];
     }
 
     private function estEtudiant(array $row): bool
