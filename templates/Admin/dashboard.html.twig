@@ -1,24 +1,35 @@
 {% extends '@EasyAdmin/page/content.html.twig' %}
 
+{% block content_title %}
+    {{ site }} - Administration
+{% endblock %}
+
 {% block main %}
-    <h1>
-        {{ site }} - Administration
-    </h1>
-    <hr>
-    <p>
-        Depuis cette interface, gérer les éléments de votre structure
+    <p class="text-muted mb-4">
+        Depuis cette interface, gérez les éléments de votre structure et vos utilisateurs.
     </p>
-    {% if site === "IUTTroyes" %}
-        <a href="{{ path('app_synchro_intranet_structure') }}"><button type="button" class="btn btn-primary">Synchronisation Intranet - Structure</button></a>
-        <br>
+
+    {% if site == "IUTTroyes" %}
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="{{ path('app_synchro_intranet_structure') }}" class="btn btn-primary">Synchronisation Intranet - Structure</a>
+            <a href="{{ path('app_synchro_intranet_referentiel') }}" class="btn btn-primary">Synchronisation Intranet - Référentiel</a>
+            <a href="{{ path('app_update_intranet_enseignant') }}" class="btn btn-primary">Synchronisation Enseignants</a>
+            <a href="{{ path('app_update_intranet_etudiant') }}" class="btn btn-primary">Synchronisation Etudiants</a>
+        </div>
         <hr>
-        <a href="{{ path('app_synchro_intranet_referentiel') }}"><button type="button" class="btn btn-primary">Synchronisation Intranet - Référentiel</button></a>
-        <br>
-        <hr>
-        <a href="{{ path('app_update_intranet_enseignant') }}"><button type="button" class="btn btn-primary">Synchronisation Enseignants</button></a>
-        <br>
-        <hr>
-        <a href="{{ path('app_update_intranet_etudiant') }}"><button type="button" class="btn btn-primary">Synchronisation Etudiants</button></a>
     {% endif %}
 
+    <div class="card shadow-sm" style="max-width: 34rem;">
+        <div class="card-body">
+            <h2 class="h5 card-title mb-2">
+                <i class="fas fa-file-csv me-2"></i>Import des utilisateurs (CSV)
+            </h2>
+            <p class="card-text text-muted mb-3">
+                Importez en lot des comptes étudiants et enseignants à partir d'un fichier CSV et téléchargez les identifiants générés.
+            </p>
+            <a href="{{ path('admin_import_users_index') }}" class="btn btn-primary">
+                <i class="fas fa-upload me-1"></i> Importer des étudiants / enseignants
+            </a>
+        </div>
+    </div>
 {% endblock %}
