@@ -42,6 +42,16 @@ class ExportIdentifiants
             ->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'comptes.csv');
     }
 
+    public function exporterVers(string $path, array $comptes): void
+    {
+        $this->verifier($comptes);
+        if (!is_writable(dirname($path))) {
+            throw new ImportException(ImportErrorType::EcritureImpossible, sprintf('Dossier inaccessible en ecriture : %s', dirname($path)));
+        }
+        $this->ecrire($path, $comptes);
+        chmod($path, 0600);
+    }
+
     private function verifier(array $comptes): void
     {
         if ([] === $comptes) {

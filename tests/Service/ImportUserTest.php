@@ -66,6 +66,18 @@ class ImportUserTest extends TestCase
         $this->assertCount(2, $this->service->getLignesComptesCrees());
     }
 
+    public function testCallbacksDeProgression(): void
+    {
+        file_put_contents($this->csv, "nom;prenom;mail\nA;B;a@x.fr\nC;D;c@x.fr\n");
+        $total = 0;
+        $avances = 0;
+
+        $this->service->importerCsv($this->csv, function (int $n) use (&$total) { $total = $n; }, function () use (&$avances) { ++$avances; });
+
+        $this->assertSame(2, $total);
+        $this->assertSame(2, $avances);
+    }
+
     public function testRoleExplicite(): void
     {
         file_put_contents($this->csv, "\xEF\xBB\xBFnom,prenom,mail,role\nA,B,a@x.fr,etudiant\nC,D,c@x.fr,prof\n");

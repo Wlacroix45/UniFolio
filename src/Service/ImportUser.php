@@ -23,17 +23,20 @@ class ImportUser
     ) {
     }
 
-    public function importerCsv(string $path): void
+    public function importerCsv(string $path, ?\Closure $onStart = null, ?\Closure $onProgress = null): void
     {
         $this->created = [];
 
         try {
             $rows = $this->lireCsv($path);
 
+            $onStart?->__invoke(count($rows));
+
             $this->entityManager->beginTransaction();
             $usernames = [];
             foreach ($rows as $row) {
                 $this->creerUtilisateur($row, $usernames);
+                $onProgress?->__invoke();
             }
             $this->entityManager->flush();
             $this->entityManager->commit();

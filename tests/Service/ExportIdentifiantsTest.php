@@ -83,4 +83,24 @@ class ExportIdentifiantsTest extends TestCase
         $this->assertFileExists($response->getFile()->getPathname());
         unlink($response->getFile()->getPathname());
     }
+
+    public function testExporterVersEcritLeCsv(): void
+    {
+        $path = $this->dossier . '/sortie.csv';
+
+        (new ExportIdentifiants())->exporterVers($path, [$this->compte()]);
+
+        $this->assertSame("nom,prenom,username,password\nDupont,Jean,dupont.jean,abc123\n", file_get_contents($path));
+        $this->assertSame('0600', substr(sprintf('%o', fileperms($path)), -4));
+    }
+
+    public function testExporterVersDossierInaccessible(): void
+    {
+        try {
+            (new ExportIdentifiants())->exporterVers('/inexistant/sortie.csv', [$this->compte()]);
+            $this->fail('exception attendue');
+        } catch (ImportException $e) {
+            $this->assertSame(ImportErrorType::EcritureImpossible, $e->getType());
+        }
+    }
 }
