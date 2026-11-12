@@ -87,6 +87,58 @@ class ImportUserTest extends TestCase
         $this->assertCount(2, $this->service->getComptesCrees());
     }
 
+    public function testDefaultRoleEtudiantSansColonneRole(): void
+    {
+        file_put_contents($this->csv, "nom;prenom;mail\nDupont;Jean;jean@univ-reims.fr\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_ETUDIANT);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_ETUDIANT, $persisted->getRoles());
+        $this->assertNotNull($persisted->getEtudiant());
+    }
+
+    public function testDefaultRoleEnseignantSurDomaineEtudiant(): void
+    {
+        file_put_contents($this->csv, "nom;prenom;mail\nDupont;Jean;jean@etu.univ-orleans.fr\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_ENSEIGNANT);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_ENSEIGNANT, $persisted->getRoles());
+        $this->assertNotNull($persisted->getEnseignant());
+    }
+
+    public function testColonneRolePrioritaireSurDefaultRole(): void
+    {
+        file_put_contents($this->csv, "nom;prenom;mail;role\nDupont;Jean;jean@x.fr;enseignant\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_ETUDIANT);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_ENSEIGNANT, $persisted->getRoles());
+        $this->assertNotNull($persisted->getEnseignant());
+    }
+
+    public function testDefaultRoleInvalideLeveException(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service->importerCsv($this->csv, defaultRole: 'ROLE_INCONNU');
+    }
+
     public function testFichierIllisible(): void
     {
         $this->expectExceptionObject(new ImportException(ImportErrorType::FichierIllisible, 'Fichier illisible : /absent.csv'));
