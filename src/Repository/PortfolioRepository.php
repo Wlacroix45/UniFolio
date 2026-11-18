@@ -64,22 +64,22 @@ class PortfolioRepository extends ServiceEntityRepository
             ->andWhere('p.visibilite = true')
             ->setParameter('departement', $dept);
         if ($etat !== null) {
-            switch($etat) {
+            switch ($etat) {
                 case 0: // Tous les portfolios
                     break;
                 case 1: // Portfolios évalués
                     $portfolios = $qb->getQuery()->getResult();  //Obtenir tous les portfolios
                     $evaluatedPortfolios = [];
 
-                    foreach($portfolios as $portfolio){
+                    foreach ($portfolios as $portfolio) {
                         $totalValidations = 0;
                         $totalEval = 0;
 
-                        foreach($portfolio->getOrdrePages() as $op){
-                            foreach($op->getPage()->getOrdreTraces() as $ot){
-                                foreach($ot->getTrace()->getValidations() as $validation){
+                        foreach ($portfolio->getOrdrePages() as $op) {
+                            foreach ($op->getPage()->getOrdreTraces() as $ot) {
+                                foreach ($ot->getTrace()->getValidations() as $validation) {
                                     $totalValidations++;
-                                    if($validation->isEtat() != 0){
+                                    if ($validation->isEtat() != 0) {
                                         $totalEval++;
                                     }
                                 }
@@ -87,7 +87,7 @@ class PortfolioRepository extends ServiceEntityRepository
                         }
 
                         //Si toutes les validations sont évaluées, ajouter le portfolio à la liste
-                        if($totalValidations == $totalEval){
+                        if ($totalValidations == $totalEval) {
                             $evaluatedPortfolios[] = $portfolio;
                         }
                     }

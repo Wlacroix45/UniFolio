@@ -27,8 +27,7 @@ class CvController extends AbstractController
 {
     public function __construct(
         #[Required] public Security $security,
-    )
-    {
+    ) {
     }
 
     #[Route('/cv', name: 'app_cv')]
@@ -50,10 +49,9 @@ class CvController extends AbstractController
 
     #[Route('/cv/new/{id}', name: 'app_cv_new')]
     public function new(
-        Request      $request,
+        Request $request,
         CvRepository $cvRepository,
-    ): Response
-    {
+    ): Response {
 
         $this->denyAccessUnlessGranted(
             'ROLE_ETUDIANT'
@@ -96,14 +94,13 @@ class CvController extends AbstractController
 
     #[Route('/cv/edit/{id}', name: 'app_cv_edit')]
     public function edit(
-        Request                $request,
-        CvRepository           $cvRepository,
-        ExperienceRepository   $experienceRepository,
-        Cv                     $cv,
-        int                    $id,
+        Request $request,
+        CvRepository $cvRepository,
+        ExperienceRepository $experienceRepository,
+        Cv $cv,
+        int $id,
         EntityManagerInterface $entityManager
-    ): Response
-    {
+    ): Response {
 
         $this->denyAccessUnlessGranted(
             'ROLE_ETUDIANT'
@@ -114,7 +111,6 @@ class CvController extends AbstractController
         $cv = $cvRepository->findOneBy(['id' => $id]);
 
         if ($cv->getEtudiant()->getId() == $user->getId()) {
-
             $form = $this->createForm(CvType::class, $cv, ['user' => $user]);
 
             $form->handleRequest($request);
@@ -148,12 +144,11 @@ class CvController extends AbstractController
 
     #[Route('/cv/delete/{id}', name: 'app_cv_delete')]
     public function delete(
-        CvRepository         $cvRepository,
+        CvRepository $cvRepository,
         ExperienceRepository $experienceRepository,
-        FormationRepository  $formationRepository,
-        int                  $id,
-    ): Response
-    {
+        FormationRepository $formationRepository,
+        int $id,
+    ): Response {
 
         $this->denyAccessUnlessGranted(
             'ROLE_ETUDIANT'
@@ -163,7 +158,6 @@ class CvController extends AbstractController
         $user = $this->security->getUser()->getEtudiant();
 
         if ($cv->getEtudiant()->getId() == $user->getId()) {
-
             $experience = $cv->getExperience();
             $formation = $cv->getFormation();
             $portfolio = $cv->getPortfolio();
@@ -191,9 +185,8 @@ class CvController extends AbstractController
     #[Route('/cv/show/{id}', name: 'app_cv_show')]
     public function show(
         CvRepository $cvRepository,
-        int          $id,
-    ): Response
-    {
+        int $id,
+    ): Response {
 
         $this->denyAccessUnlessGranted(
             'ROLE_ETUDIANT'
@@ -203,10 +196,9 @@ class CvController extends AbstractController
         $user = $this->security->getUser()->getEtudiant();
 
         if ($cv->getEtudiant()->getId() == $user->getId()) {
-
             return $this->render('cv/show.html.twig', [
             'cv' => $cv,
-        ]);
+            ]);
         } else {
             return $this->render('security/accessDenied.html.twig');
         }

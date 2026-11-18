@@ -31,5 +31,4 @@ class ApcReferentielCrudController extends AbstractCrudController
             AssociationField::new('departement'),
         ];
     }
-
 }
