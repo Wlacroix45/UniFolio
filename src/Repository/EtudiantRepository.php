@@ -13,7 +13,6 @@ use App\Entity\Departement;
 use App\Entity\Etudiant;
 use App\Entity\Semestre;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -61,7 +60,7 @@ class EtudiantRepository extends ServiceEntityRepository
             ->innerJoin('d.departement', 'dep')
             ->where('dep.id = :departement')
             ->setParameter('departement', $departement->getId())
-            ->orderBy('e.nom', Criteria::ASC)
+            ->orderBy('e.nom', 'ASC')
             ->getQuery()
             ->getResult();
 
@@ -99,8 +98,8 @@ class EtudiantRepository extends ServiceEntityRepository
             ++$i;
         }
 
-        return $query->orderBy('e.nom', Criteria::ASC)
-            ->addOrderBy('e.prenom', Criteria::ASC)
+        return $query->orderBy('e.nom', 'ASC')
+            ->addOrderBy('e.prenom', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -110,8 +109,8 @@ class EtudiantRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('e')
             ->where('e.semestre = :semestre')
             ->setParameter('semestre', $semestre)
-            ->orderBy('e.nom', Criteria::ASC)
-            ->addOrderBy('e.prenom', Criteria::ASC);
+            ->orderBy('e.nom', 'ASC')
+            ->addOrderBy('e.prenom', 'ASC');
     }
 
     public function findBySemestre(Semestre $semestre): array
