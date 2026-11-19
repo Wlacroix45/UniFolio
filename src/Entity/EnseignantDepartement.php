@@ -7,47 +7,88 @@
  */
 namespace App\Entity;
 
+use App\Enum\DepartementRoleEnum;
 use App\Repository\EnseignantDepartementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: EnseignantDepartementRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_enseignant_departement', columns: ['enseignant_id', 'departement_id'])]
 class EnseignantDepartement extends BaseEntity
 {
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $defaut = false;
 
+    /**
+     * Rôle spécifique de l'enseignant pour ce département (Évaluateur ou Éditeur).
+     */
+    #[ORM\Column(
+        length: 50,
+        nullable: false,
+        enumType: DepartementRoleEnum::class,
+        options: ['default' => 'ROLE_EVALUATEUR']
+    )]
+    private DepartementRoleEnum $role = DepartementRoleEnum::EVALUATEUR;
+
     public function __construct(
         #[ORM\ManyToOne(targetEntity: Enseignant::class, inversedBy: 'enseignantDepartements')]
-        private Enseignant $enseignant,
+        private ?Enseignant $enseignant = null,
         #[ORM\ManyToOne(targetEntity: Departement::class, inversedBy: 'enseignantDepartements')]
-        private Departement $departement
+        private ?Departement $departement = null,
+        DepartementRoleEnum $role = DepartementRoleEnum::EVALUATEUR
     ) {
-//        $this->addRole('ROLE_PERMANENT');
-//        $this->annee = (int) date('Y');
+        $this->role = $role;
     }
 
-    public function addRole(string $role): self
+    public function getRole(): DepartementRoleEnum
     {
-        $roles = $this->getRoles();
-        $roles[] = $role;
-        $this->roles = json_encode($roles, JSON_THROW_ON_ERROR);
+        return $this->role;
+    }
+
+    public function setRole(DepartementRoleEnum $role): self
+    {
+        $this->role = $role;
 
         return $this;
     }
 
-    public function getRoles(): ?array
+    public function isEditeur(): bool
     {
-        if ('' === $this->roles) {
-            return [];
-        }
-
-        return json_decode($this->roles, false, 2, JSON_THROW_ON_ERROR);
+        return $this->role === DepartementRoleEnum::EDITEUR;
     }
 
-    public function setRoles(string $roles): self
+    public function isEvaluateur(): bool
     {
-        $this->roles = $roles;
+        return $this->role === DepartementRoleEnum::EVALUATEUR || $this->role === DepartementRoleEnum::EDITEUR;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        return [$this->role->value];
+    }
+
+    public function addRole(string|DepartementRoleEnum $role): self
+    {
+        if ($role instanceof DepartementRoleEnum) {
+            $this->role = $role;
+        } else {
+            $resolved = DepartementRoleEnum::tryFrom($role);
+            if ($resolved !== null) {
+                $this->role = $resolved;
+            }
+        }
+
+        return $this;
+    }
+
+    public function removeRole(string $role): self
+    {
+        if ($this->role->value === $role) {
+            $this->role = DepartementRoleEnum::EVALUATEUR;
+        }
 
         return $this;
     }
@@ -76,40 +117,12 @@ class EnseignantDepartement extends BaseEntity
         return $this;
     }
 
-    public function getAnnee(): ?int
+    public function getDefaut(): bool
     {
-        return $this->annee;
+        return $this->defaut;
     }
 
-    public function setAnnee(int $annee): self
-    {
-        $this->annee = $annee;
-
-        return $this;
-    }
-
-    /**
-     * @throws \JsonException
-     */
-    public function clearRole(): self
-    {
-        $this->roles = json_encode([], JSON_THROW_ON_ERROR);
-
-        return $this;
-    }
-
-    public function removeRole(string $role): self
-    {
-        $roles = $this->getRoles();
-        $key = array_search($role, $roles, true);
-        unset($roles[$key]);
-        $roles = array_values($roles);
-        $this->roles = json_encode($roles, JSON_THROW_ON_ERROR);
-
-        return $this;
-    }
-
-    public function getDefaut(): ?bool
+    public function isDefaut(): bool
     {
         return $this->defaut;
     }
@@ -119,5 +132,14 @@ class EnseignantDepartement extends BaseEntity
         $this->defaut = $defaut;
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        $dept = $this->departement?->getLibelle() ?? 'Département';
+        $role = $this->role->getLibelle();
+        $defaut = $this->defaut ? ' [Défaut]' : '';
+
+        return sprintf('%s (%s)%s', $dept, $role, $defaut);
     }
 }

@@ -2,11 +2,13 @@ security:
   # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
   password_hashers:
     App\Entity\Users: 'auto'
+    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
   role_hierarchy:
-    ROLE_ADMIN: [ ROLE_USER, ROLE_ALLOWED_TO_SWITCH ]
-
-    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    ROLE_ADMIN: [ ROLE_EDITEUR, ROLE_ALLOWED_TO_SWITCH ]
+    ROLE_EDITEUR: [ ROLE_EVALUATEUR ]
+    ROLE_EVALUATEUR: [ ROLE_ENSEIGNANT, ROLE_USER ]
+    ROLE_ETUDIANT: [ ROLE_USER ]
   # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
   providers:
     # used to reload user from session & other features (e.g. switch_user)
@@ -46,7 +48,7 @@ security:
   access_control:
     - { path: ^/admin, roles: ROLE_ADMIN }
     - { path: ^/etudiant, roles: [ROLE_ETUDIANT, ROLE_ADMIN] }
-    - { path: ^/enseignant, roles: [ROLE_ENSEIGNANT, ROLE_ADMIN] }
+    - { path: ^/enseignant, roles: [ROLE_ENSEIGNANT, ROLE_EVALUATEUR, ROLE_EDITEUR, ROLE_ADMIN] }
 
 when@test:
   security:

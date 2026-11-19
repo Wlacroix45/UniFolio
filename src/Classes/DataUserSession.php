@@ -10,9 +10,13 @@ namespace App\Classes;
 use App\Entity\Annee;
 use App\Entity\Departement;
 use App\Entity\Diplome;
+use App\Entity\Enseignant;
+use App\Entity\EnseignantDepartement;
 use App\Entity\Etudiant;
 use App\Entity\Groupe;
 use App\Entity\Semestre;
+use App\Entity\Users;
+use App\Enum\DepartementRoleEnum;
 use App\Repository\AnneeRepository;
 use App\Repository\AnneeUniversitaireRepository;
 use App\Repository\DepartementRepository;
@@ -26,20 +30,20 @@ use App\Repository\SemestreRepository;
 use App\Repository\TypeGroupeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-// Récupère les données d'un session utilisateur
+// Récupère les données d'une session utilisateur
 class DataUserSession
 {
     /**
      * @var Semestre[]
      */
-    protected array $semestres = []; // semestres actifs de la departement
+    protected array $semestres = [];
 
     /**
      * @var Diplome[]
@@ -57,9 +61,20 @@ class DataUserSession
 
     private array $semestresActifs = [];
 
-    private $notifications;
-
     private ?Etudiant $etudiant = null;
+
+    protected ?Enseignant $enseignant = null;
+
+    /**
+     * @var Departement[]
+     */
+    protected array $allDepartements = [];
+
+    protected array $groupes = [];
+
+    protected array $typesGroupes = [];
+
+    protected RequestStack $requestStack;
 
     /**
      * DataUserSession constructor.
@@ -84,54 +99,114 @@ class DataUserSession
         protected NotificationRepository $notificationRepository,
     ) {
         $this->requestStack = $session;
-        $session = $this->requestStack->getSession();
 
-        $enseignant = $this->enseignantRepository->findOneBy(['username' => $this->getUser()->getUsername()]);
-        $etudiant = $this->etudiantRepository->findOneBy(['username' => $this->getUser()->getUsername()]);
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof UserInterface) {
+            return;
+        }
+
+        $activeSession = $this->requestStack->getCurrentRequest()?->hasSession()
+            ? $this->requestStack->getSession()
+            : null;
+        $deptSession = $activeSession?->get('departement');
+
+        $username = $currentUser->getUserIdentifier();
+        $enseignant = $this->enseignantRepository->findOneBy(['username' => $username]);
+        $etudiant = $this->etudiantRepository->findOneBy(['username' => $username]);
 
         $this->enseignant = $enseignant;
         $this->etudiant = $etudiant;
 
-        if ($enseignant) {
-            $this->departement = $this->departementRepository->findOneBy(['id' => $session->get('departement')]);
+        if ($enseignant !== null) {
             $this->allDepartements = $this->departementRepository->findDepartementEnseignant($enseignant);
-            if (null !== $this->departement) {
-                $this->semestres = $this->semestreRepository->findByDepartement($this->departement);
-                $this->semestresActifs = [];
-                foreach ($this->semestres as $semestre) {
-                    if ($semestre->isActif()) {
-                        $this->semestresActifs[] = $semestre;
-                    }
+            $deptId = $this->extractDepartementId($deptSession);
+
+            if ($deptId !== null) {
+                $candidate = $this->departementRepository->find($deptId);
+                if (
+                    $candidate !== null
+                    && ($enseignant->getEnseignantDepartement($candidate) !== null
+                        || in_array('ROLE_ADMIN', $currentUser->getRoles(), true))
+                ) {
+                    $this->departement = $candidate;
                 }
-                $this->diplomes = $this->diplomeRepository->findByDepartement($this->departement);
-                $this->annees = $this->anneeRepository->findByDepartement($this->departement);
-                $this->typesGroupes = $this->typeGroupeRepository->findByDepartementSemestresActifs($this->departement);
             }
-        } elseif ($etudiant) {
-            $this->departement = $this->departementRepository->findOneBy(['id' => $session->get('departement')]);
-            // TODO: récupérer seulement les données propres à l'étudiant
+
+            if ($this->departement === null) {
+                $defaultDepts = $this->departementRepository->findDepartementEnseignantDefaut($enseignant);
+                if (!empty($defaultDepts)) {
+                    $this->departement = $defaultDepts[0];
+                } elseif (!empty($this->allDepartements)) {
+                    $this->departement = $this->allDepartements[0];
+                }
+            }
+
+            if ($this->departement !== null) {
+                $this->loadDepartementData($this->departement);
+            }
+        } elseif ($etudiant !== null) {
+            $deptId = $this->extractDepartementId($deptSession);
+            if ($deptId !== null) {
+                $this->departement = $this->departementRepository->find($deptId);
+            }
+            if ($this->departement === null) {
+                $this->departement = $this->departementRepository->findDepartementEtudiant($etudiant);
+            }
             $this->groupes = $this->groupeRepository->findGroupesEtudiant($etudiant);
             $this->typesGroupes = $this->typeGroupeRepository->findTypesGroupesEtudiant($etudiant);
+
+            if ($etudiant->getUsername() === 'etudiant' && $this->departement !== null) {
+                $this->loadDepartementData($this->departement);
+            }
+        } elseif (in_array('ROLE_ADMIN', $currentUser->getRoles(), true)) {
+            $this->allDepartements = $this->departementRepository->findAll();
+            $deptId = $this->extractDepartementId($deptSession);
+
+            if ($deptId !== null) {
+                $this->departement = $this->departementRepository->find($deptId);
+            }
+            if ($this->departement === null && !empty($this->allDepartements)) {
+                $this->departement = $this->allDepartements[0];
+            }
+            if ($this->departement !== null) {
+                $this->loadDepartementData($this->departement);
+            }
         } else {
             throw new AccessDeniedException('Vous n\'avez pas accès à cette page');
         }
+    }
 
-        //Si l'utilisateur connecté a les roles admin et enseignant, on set son département defaut à true dans la table enseignant_departement
-        if ($enseignant && $enseignant->getUsername() === 'enseignant') {
-            $this->departement = $this->departementRepository->findOneBy(['libelle' => 'MMI']);
-        } elseif ($etudiant && $etudiant->getUsername() === 'etudiant') {
-            $this->departement = $this->departementRepository->findOneBy(['libelle' => 'MMI']);
-            $this->semestres = $this->semestreRepository->findByDepartement($this->departement);
-            $this->semestresActifs = [];
-            foreach ($this->semestres as $semestre) {
-                if ($semestre->isActif()) {
-                    $this->semestresActifs[] = $semestre;
-                }
-            }
-            $this->diplomes = $this->diplomeRepository->findByDepartement($this->departement);
-            $this->annees = $this->anneeRepository->findByDepartement($this->departement);
-            $this->typesGroupes = $this->typeGroupeRepository->findByDepartementSemestresActifs($this->departement);
+    private function extractDepartementId(mixed $deptSession): ?int
+    {
+        if (is_array($deptSession) && isset($deptSession[0])) {
+            return $deptSession[0] instanceof Departement
+                ? $deptSession[0]->getId()
+                : (is_numeric($deptSession[0]) ? (int) $deptSession[0] : null);
         }
+
+        if ($deptSession instanceof Departement) {
+            return $deptSession->getId();
+        }
+
+        if (is_numeric($deptSession)) {
+            return (int) $deptSession;
+        }
+
+        return null;
+    }
+
+    private function loadDepartementData(Departement $departement): void
+    {
+        $this->semestres = $this->semestreRepository->findByDepartement($departement);
+        $this->semestresActifs = [];
+        foreach ($this->semestres as $semestre) {
+            if ($semestre->isActif()) {
+                $this->semestresActifs[] = $semestre;
+            }
+        }
+        $this->diplomes = $this->diplomeRepository->findByDepartement($departement);
+        $this->annees = $this->anneeRepository->findByDepartement($departement);
+        $this->typesGroupes = $this->typeGroupeRepository->findByDepartementSemestresActifs($departement);
     }
 
     public function getUser(): ?UserInterface
@@ -158,6 +233,64 @@ class DataUserSession
         return $this->allDepartements;
     }
 
+    /**
+     * @return EnseignantDepartement[]
+     */
+    public function getEnseignantDepartements(): array
+    {
+        if ($this->enseignant === null) {
+            return [];
+        }
+
+        return $this->enseignantDepartementRepository->findByEnseignant($this->enseignant);
+    }
+
+    public function getCurrentRole(): ?DepartementRoleEnum
+    {
+        if ($this->enseignant === null || $this->departement === null) {
+            return null;
+        }
+
+        return $this->enseignant->getRoleForDepartement($this->departement);
+    }
+
+    public function getCurrentRoleLibelle(): ?string
+    {
+        $user = $this->getUser();
+        if ($user !== null && in_array('ROLE_ADMIN', $user->getRoles(), true) && $this->enseignant === null) {
+            return 'Administrateur';
+        }
+
+        return $this->getCurrentRole()?->getLibelle();
+    }
+
+    public function isEditeur(): bool
+    {
+        $user = $this->getUser();
+        if ($user instanceof Users && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return true;
+        }
+
+        return $this->getCurrentRole() === DepartementRoleEnum::EDITEUR;
+    }
+
+    public function isEvaluateur(): bool
+    {
+        $user = $this->getUser();
+        if ($user instanceof Users && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return true;
+        }
+
+        $role = $this->getCurrentRole();
+
+        return $role === DepartementRoleEnum::EVALUATEUR || $role === DepartementRoleEnum::EDITEUR;
+    }
+
+    public function getEnseignant(): ?Enseignant
+    {
+        return $this->enseignant;
+    }
+
     public function getSemestres(): array
     {
         return $this->semestres;
@@ -176,6 +309,7 @@ class DataUserSession
                 $semestres[] = $semestre;
             }
         }
+
         return $semestres;
     }
 
@@ -189,66 +323,92 @@ class DataUserSession
         return $this->annees;
     }
 
-    public function getAllEnseignants()
+    public function getAllEnseignants(): array
     {
+        if ($this->departement === null) {
+            return [];
+        }
+
         return $this->enseignantRepository->findByDepartement($this->departement);
     }
 
-    public function getEtudiantsDept()
+    public function getEtudiantsDept(): array
     {
+        if ($this->departement === null) {
+            return [];
+        }
+
         return $this->etudiantRepository->findByDepartementArray($this->departement);
     }
 
-    public function getEtudiantsSemestre()
+    public function getEtudiantsSemestre(): array
     {
+        $etudiants = [];
         foreach ($this->semestresActifs as $semestre) {
             $etudiants[] = $this->etudiantRepository->findBySemestre($semestre);
         }
+
         return $etudiants;
     }
 
-    public function getEtudiantAnnee()
+    public function getEtudiantAnnee(): array
     {
+        $etudiants = [];
         foreach ($this->annees as $annee) {
             $etudiants[] = $this->etudiantRepository->findByAnnee($annee);
         }
+
         return $etudiants;
     }
 
-    public function getTypesGroupe()
+    public function getTypesGroupe(): array
     {
         return $this->typesGroupes;
     }
 
-    public function getGroupes()
+    public function getGroupes(): array
     {
+        if ($this->departement === null) {
+            return [];
+        }
+
         return $this->groupeRepository->findByDepartementSemestreActif($this->departement);
     }
 
-    public function DepartementDefaut()
+    public function DepartementDefaut(): array
     {
+        if ($this->enseignant === null) {
+            return [];
+        }
+
         return $this->departementRepository->findDepartementEnseignantDefaut($this->enseignant);
     }
 
-    public function getNotifications()
+    public function getNotifications(): array
     {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return [];
+        }
 
-        if ($this->security->isGranted('ROLE_ENSEIGNANT')) {
-            $notifications = $this->notificationRepository->findBy(
-                ['enseignant' => $this->getUser()->getEnseignant()],
-                ['dateCreation' => 'DESC']
-            );
-        } elseif ($this->security->isGranted('ROLE_ETUDIANT')) {
-            $notifications = $this->notificationRepository->findBy(
-                ['etudiant' => $this->getUser()->getEtudiant()],
+        if ($this->security->isGranted('ROLE_ENSEIGNANT') && $user->getEnseignant() !== null) {
+            return $this->notificationRepository->findBy(
+                ['enseignant' => $user->getEnseignant()],
                 ['dateCreation' => 'DESC']
             );
         }
 
-        return $notifications;
+        if ($this->security->isGranted('ROLE_ETUDIANT') && $user->getEtudiant() !== null) {
+            return $this->notificationRepository->findBy(
+                ['etudiant' => $user->getEtudiant()],
+                ['dateCreation' => 'DESC']
+            );
+        }
+
+        return [];
     }
 
-    public function getEtudiant()
+    public function getEtudiant(): ?Etudiant
     {
         return $this->etudiant;
     }

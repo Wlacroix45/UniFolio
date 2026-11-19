@@ -72,7 +72,10 @@ class LoginAuthenticator extends AbstractAuthenticator
 
         if ($etudiant) {
             $departement = $this->departementRepository->findDepartementEtudiant($etudiant);
-            $this->session->getSession()->set('departement', $departement);
+            if ($departement !== null) {
+                $this->session->getSession()->set('departement', $departement->getId());
+            }
+
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
         }
 
@@ -83,17 +86,34 @@ class LoginAuthenticator extends AbstractAuthenticator
                 return new RedirectResponse($this->urlGenerator->generate('app_login', ['message' => 'pas_departement']));
             }
 
-            $departement = $this->departementRepository->findDepartementEnseignantDefaut($enseignant);
-            if (0 === count($departement)) {
-                return new RedirectResponse($this->urlGenerator->generate('app_choix_departement', [], UrlGeneratorInterface::ABSOLUTE_URL));
-            }
+            if (1 === count($departements)) {
+                $this->session->getSession()->set('departement', $departements[0]->getId());
 
-            if (1 === count($departement)) {
-                $this->session->getSession()->set('departement', $departement);
                 return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
             }
 
-            return new RedirectResponse($this->urlGenerator->generate('app_login', ['message' => 'pas_departement']));
+            $departement = $this->departementRepository->findDepartementEnseignantDefaut($enseignant);
+            if (1 === count($departement)) {
+                $this->session->getSession()->set('departement', $departement[0]->getId());
+
+                return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
+            }
+
+            return new RedirectResponse(
+                $this->urlGenerator->generate('app_choix_departement', [], UrlGeneratorInterface::ABSOLUTE_URL)
+            );
+        }
+
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            $allDepts = $this->departementRepository->findAll();
+            if (!empty($allDepts)) {
+                $this->session->getSession()->set('departement', $allDepts[0]->getId());
+            }
+
+            return new RedirectResponse($this->getTargetPath(
+                $request->getSession(),
+                $firewallName
+            ) ?? $this->urlGenerator->generate('admin'));
         }
 
         return new RedirectResponse($this->getTargetPath(

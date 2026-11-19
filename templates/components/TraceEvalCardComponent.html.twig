@@ -151,6 +151,7 @@
                         {{ this.trace.description|raw }}
                     </p>
 
+                    {% set canEvaluate = is_granted('DEPARTEMENT_EVALUATE', this.trace) %}
                     <ul class="dashboard-competences">
                         {% for validation in this.trace.validations %}
                             <li>
@@ -160,7 +161,7 @@
                                                        </span> •
                                     {{ validation.apcNiveau.libelle }}
                                 </div>
-                                <fieldset>
+                                <fieldset{% if not canEvaluate %} disabled{% endif %}>
                                     <div>
                                         <div class="form-check">
                                             {% if validation.etat == 0 %}
@@ -448,6 +449,7 @@
                             {% endfor %}
                         {% endif %}
                     </div>
+                    {% if canEvaluate %}
                     <div class="mb-3">
                         <form>
                             <label class="form-label" for="commentContent">Ajouter un commentaire</label>
@@ -485,6 +487,7 @@
                             </div>
                         </form>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -7,6 +7,7 @@
  */
 namespace App\Entity;
 
+use App\Enum\DepartementRoleEnum;
 use App\Repository\EnseignantRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -47,7 +48,12 @@ class Enseignant
     /**
      * @var Collection<int, EnseignantDepartement>
      */
-    #[ORM\OneToMany(mappedBy: 'enseignant', targetEntity: EnseignantDepartement::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(
+        mappedBy: 'enseignant',
+        targetEntity: EnseignantDepartement::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
     private Collection $enseignantDepartements;
 
     #[ORM\Column(length: 75, nullable: true)]
@@ -242,11 +248,114 @@ class Enseignant
         return $this;
     }
 
-    public function addDepartement(Departement $departement): self
-    {
-        $enseignantDepartement = new EnseignantDepartement($this, $departement);
-        $enseignantDepartement->setDepartement($departement);
+    public function addDepartement(
+        Departement $departement,
+        DepartementRoleEnum $role = DepartementRoleEnum::EVALUATEUR,
+        bool $defaut = false
+    ): self {
+        $existing = $this->getEnseignantDepartement($departement);
+        if ($existing !== null) {
+            $existing->setRole($role);
+            $existing->setDefaut($defaut);
+
+            return $this;
+        }
+
+        $enseignantDepartement = new EnseignantDepartement($this, $departement, $role);
+        $enseignantDepartement->setDefaut($defaut);
         $this->addEnseignantDepartement($enseignantDepartement);
+
+        return $this;
+    }
+
+    public function removeDepartement(Departement $departement): self
+    {
+        $existing = $this->getEnseignantDepartement($departement);
+        if ($existing !== null) {
+            $this->removeEnseignantDepartement($existing);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Departement>
+     */
+    public function getDepartements(): Collection
+    {
+        $departements = new ArrayCollection();
+        foreach ($this->enseignantDepartements as $ed) {
+            $dept = $ed->getDepartement();
+            if ($dept !== null && !$departements->contains($dept)) {
+                $departements->add($dept);
+            }
+        }
+
+        return $departements;
+    }
+
+    public function getEnseignantDepartement(Departement $departement): ?EnseignantDepartement
+    {
+        foreach ($this->enseignantDepartements as $ed) {
+            $dept = $ed->getDepartement();
+            if ($dept === null) {
+                continue;
+            }
+            if ($dept === $departement || ($dept->getId() !== null && $dept->getId() === $departement->getId())) {
+                return $ed;
+            }
+        }
+
+        return null;
+    }
+
+    public function getRoleForDepartement(Departement $departement): ?DepartementRoleEnum
+    {
+        return $this->getEnseignantDepartement($departement)?->getRole();
+    }
+
+    public function hasRoleInDepartement(Departement $departement, string|DepartementRoleEnum $role): bool
+    {
+        $ed = $this->getEnseignantDepartement($departement);
+        if ($ed === null) {
+            return false;
+        }
+
+        $roleValue = $role instanceof DepartementRoleEnum ? $role->value : $role;
+
+        if ($roleValue === DepartementRoleEnum::EVALUATEUR->value) {
+            return $ed->isEvaluateur();
+        }
+
+        if ($roleValue === DepartementRoleEnum::EDITEUR->value) {
+            return $ed->isEditeur();
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        return $this->users?->getRoles() ?? ['ROLE_EVALUATEUR'];
+    }
+
+    /**
+     * @param string[] $roles
+     */
+    public function setRoles(array $roles): self
+    {
+        if ($this->users === null) {
+            $user = new Users();
+            $user->setUsername($this->username ?? $this->mail_univ ?? 'user_' . uniqid());
+            $user->setEmail($this->mail_univ ?? $this->mail_perso);
+            $user->setIsVerified(true);
+            $this->setUsers($user);
+        }
+
+        $this->users->setRoles(array_values(array_unique($roles)));
 
         return $this;
     }

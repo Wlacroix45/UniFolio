@@ -15,6 +15,7 @@ use App\Event\EvaluationEvent;
 use App\Repository\CommentaireRepository;
 use App\Repository\TraceRepository;
 use App\Repository\ValidationRepository;
+use App\Security\Voter\DepartementVoter;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -75,6 +76,9 @@ class AbstractTraceEvalComponent extends BaseController
     #[LiveAction]
     public function changeValidation(EventDispatcherInterface $eventDispatcher)
     {
+        $trace = $this->getTrace();
+        $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
+
         $selectedValidation = $this->selectedValidation;
         list($validationId, $state) = explode('-', $selectedValidation);
         $validationId = intval($validationId);
@@ -99,6 +103,9 @@ class AbstractTraceEvalComponent extends BaseController
     #[LiveAction]
     public function handleComment()
     {
+        $trace = $this->getTrace();
+        $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
+
         if (!$this->commentContent) {
             return;
         }
@@ -112,7 +119,7 @@ class AbstractTraceEvalComponent extends BaseController
         $this->commentaire->setContenu($this->commentContent);
         $this->commentaire->setVisibilite((bool) $this->commentVisibility);
         $this->commentaire->setEnseignant($this->security->getUser()->getEnseignant());
-        $this->commentaire->setTrace($this->getTrace());
+        $this->commentaire->setTrace($trace);
         $this->commentaire->setDatecreation(new \DateTime());
 
         $this->commentaireRepository->save($this->commentaire, true);
@@ -137,6 +144,8 @@ class AbstractTraceEvalComponent extends BaseController
     #[LiveAction]
     public function handleCommentResponse(#[LiveArg] int $commentParent)
     {
+        $trace = $this->getTrace();
+        $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
 
         $commentParent = $this->commentaireRepository->find($commentParent);
 
@@ -149,15 +158,15 @@ class AbstractTraceEvalComponent extends BaseController
         $this->commentaire->setContenu($this->commentResponseContent);
         $this->commentaire->setVisibilite((bool) $this->commentVisibility);
         $this->commentaire->setEnseignant($this->security->getUser()->getEnseignant());
-        $this->commentaire->setTrace($this->getTrace());
+        $this->commentaire->setTrace($trace);
         $this->commentaire->setDatecreation(new \DateTime());
         $this->commentaire->setCommentaireParent($commentParent->getId());
 
         $this->commentaireRepository->save($this->commentaire, true);
 
 //        if ($this->commentaire->isVisibilite() == 1) {
-            $event = new CommentaireEvent($this->commentaire);
-            $this->eventDispatcher->dispatch($event, CommentaireEvent::COMMENTED);
+        $event = new CommentaireEvent($this->commentaire);
+        $this->eventDispatcher->dispatch($event, CommentaireEvent::COMMENTED);
 //        }
 
         $this->commentResponseContent = '';
@@ -169,6 +178,9 @@ class AbstractTraceEvalComponent extends BaseController
     #[LiveAction]
     public function removeComment(#[LiveArg] int $commentId)
     {
+        $trace = $this->getTrace();
+        $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
+
         $comment = $this->commentaireRepository->find($commentId);
         $this->commentaireRepository->remove($comment, true);
         $commentairesEnfants = $this->commentaireRepository->findBy(['commentaire_parent' => $commentId]);

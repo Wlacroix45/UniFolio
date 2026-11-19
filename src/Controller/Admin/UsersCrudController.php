@@ -44,7 +44,7 @@ class UsersCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         // Construction manuelle des input étudiant
-        $etudiant = FormField::addPanel('Etudiant')
+        $etudiant = FormField::addFieldset('Etudiant')
             ->setFormTypeOption('data_class', Etudiant::class)
             ->setFormType(EtudiantType::class)
             ->onlyOnForms();
@@ -64,11 +64,15 @@ class UsersCrudController extends AbstractCrudController
         return [
 
             TextField::new('username', 'Nom d\'utilisateur'),
-            ChoiceField::new('roles', 'Rôles')->setHelp('Rôles disponibles: ROLE_ADMIN, ROLE_ETUDIANT, ROLE_ENSEIGNANT')->allowMultipleChoices(true)->setChoices([
-                'etudiant' => 'ROLE_ETUDIANT',
-                'enseignant' => 'ROLE_ENSEIGNANT',
-                'admin' => 'ROLE_ADMIN',
-            ]),
+            ChoiceField::new('roles', 'Rôles')
+                ->setHelp('Rôles disponibles: ROLE_ADMIN, ROLE_EDITEUR, ROLE_EVALUATEUR, ROLE_ETUDIANT')
+                ->allowMultipleChoices(true)
+                ->setChoices([
+                    'Étudiant' => 'ROLE_ETUDIANT',
+                    'Évaluateur' => 'ROLE_EVALUATEUR',
+                    'Éditeur' => 'ROLE_EDITEUR',
+                    'Admin' => 'ROLE_ADMIN',
+                ]),
             EmailField::new('email', 'Adresse mail'),
             $password,
             $etudiant,
