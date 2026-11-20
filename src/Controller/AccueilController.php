@@ -7,6 +7,7 @@
  */
 namespace App\Controller;
 
+use App\Entity\Users;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class AccueilController extends AbstractController
 {
     private readonly RequestStack $session;
+
     public function __construct(RequestStack $session)
     {
         $this->session = $session;
@@ -23,20 +25,26 @@ class AccueilController extends AbstractController
     #[Route('/', name: 'app_accueil')]
     public function index(): Response
     {
-        if ($this->isGranted('ROLE_ETUDIANT')) {
+        $user = $this->getUser();
+
+        if ($this->isGranted('ROLE_ETUDIANT') && $user instanceof Users && $user->getEtudiant() !== null) {
             if ($this->session->getSession()->get('departement')) {
                 return $this->redirectToRoute('etudiant_dashboard');
-            } else {
-                return $this->redirectToRoute('old_etudiant_dashboard');
             }
-        } elseif ($this->isGranted('ROLE_ENSEIGNANT')) {
-            return $this->redirectToRoute('enseignant_dashboard');
-        } elseif ($this->isGranted('ROLE_ADMIN')) {
-            return $this->redirectToRoute('admin');
-        } else {
-            return $this->render('accueil/index.html.twig', [
-                'controller_name' => 'AccueilController',
-            ]);
+
+            return $this->redirectToRoute('old_etudiant_dashboard');
         }
+
+        if ($this->isGranted('ROLE_ENSEIGNANT') && $user instanceof Users && $user->getEnseignant() !== null) {
+            return $this->redirectToRoute('enseignant_dashboard');
+        }
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $this->redirectToRoute('admin');
+        }
+
+        return $this->render('accueil/index.html.twig', [
+            'controller_name' => 'AccueilController',
+        ]);
     }
 }

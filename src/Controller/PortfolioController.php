@@ -27,6 +27,7 @@ use App\Repository\PageRepository;
 use App\Repository\PortfolioRepository;
 use App\Repository\TraceRepository;
 use App\Repository\ValidationRepository;
+use App\Security\Voter\DepartementVoter;
 use Dompdf\Dompdf;
 use Knp\Snappy\Pdf;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -163,10 +164,13 @@ class PortfolioController extends BaseController
         $user = $this->security->getUser();
         $portfolio = $portfolioRepository->findOneBy(['id' => $id]);
 
+        if (!$portfolio || !$this->isGranted(DepartementVoter::VIEW, $portfolio)) {
+            return $this->render('security/accessDenied.html.twig');
+        }
 
         switch ($step) {
             case 'portfolio':
-                if ($this->isGranted('ROLE_ENSEIGNANT')) {
+                if ($this->isGranted(DepartementVoter::EVALUATE, $portfolio)) {
                     // Créez une instance de votre entité Commentaire
                     $commentaire = new Commentaire();
 
@@ -174,7 +178,7 @@ class PortfolioController extends BaseController
                     $this->form = $this->formFactory->create(CommentaireType::class, $commentaire);
                     $this->commentForm = $this->form->createView();
                 }
-                if ($this->isGranted('ROLE_ENSEIGNANT') || ($this->isGranted('ROLE_ETUDIANT') && $portfolio->getEtudiant() == $user->getEtudiant())) {
+                if ($this->isGranted(DepartementVoter::VIEW, $portfolio)) {
                     //Récupérer les pages du portfolio
                     $ordrePages = $ordrePageRepository->findBy(['portfolio' => $portfolio], ['ordre' => 'ASC']);
                     $pages = [];
@@ -242,7 +246,7 @@ class PortfolioController extends BaseController
                 break;
 
             case 'evalPage':
-                if ($this->isGranted('ROLE_ENSEIGNANT')) {
+                if ($this->isGranted(DepartementVoter::EVALUATE, $portfolio)) {
                     $page = $pageRepository->findOneBy(['id' => $request->query->get('page')]);
 
                     $ordreTraces = $ordreTraceRepository->findBy(['page' => $page], ['ordre' => 'ASC']);

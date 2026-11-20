@@ -41,52 +41,59 @@ class SecurityController extends AbstractController
         EnseignantRepository $enseignantRepository,
         RequestStack $session,
         EntityManagerInterface $entityManager,
-    ) {
-        if ($this->isGranted('ROLE_ENSEIGNANT')) {
-            $user = $this->getUser();
-            $enseignant = $enseignantRepository->findOneBy(['username' => $user->getUsername()]);
-            if (!$enseignant) {
-                return $this->redirectToRoute('app_login', ['message' => 'Vous devez être intervenant ou enseignant pour accéder à cette page.']);
-            }
-
-            $departements = $enseignantDepartementRepository->findByEnseignant($enseignant);
-            $update = null;
-            // si le formulaire est envoyé
-            if ('POST' === $request->getMethod()) {
-                $update = $enseignantDepartementRepository->findOneBy(['enseignant' => $enseignant, 'defaut' => true]);
-                // Si aucun departement est Defaut = true on set Defaut à true pour le departement sélectionné
-                if (null === $update) {
-                    $update = $enseignantDepartementRepository->findOneBy(['enseignant' => $enseignant, 'departement' => $request->request->get('departement')]);
-                    $update->setDefaut(true);
-                    $this->redirectToRoute('app_dashboard');
-                    $entityManager->flush();
-                } else {
-                    // Si un departement est Defaut = true on set Defaut à false pour ce département et on set Defaut à true pour le departement sélectionné
-                    $update->setDefaut(false);
-                    // On set Defaut à true pour le departement sélectionné
-                    $update = $enseignantDepartementRepository->findOneBy(['enseignant' => $enseignant, 'departement' => $request->request->get('departement')]);
-                    // dd($update);
-                    $update->setDefaut(true);
-                    $this->dataUserSession->setDepartement($update->getDepartement());
-
-                    $this->redirectToRoute('app_dashboard');
-                    $entityManager->flush();
-                }
-
-                if (null !== $update->getDepartement()) {
-                    $this->addFlash('success', 'Formation par défaut sauvegardée');
-//                    $session->getSession()->set('departement', $update->getDepartement()); // on sauvegarde
-                    $this->dataUserSession->setDepartement($update->getDepartement());
-
-                    return $this->redirectToRoute('app_accueil');
-                }
-            }
-            return $this->render(
-                'security/choix-departement.html.twig',
-                ['departements' => $departements, 'user' => $user]
-            );
-        } else {
+    ): Response {
+        if (!$this->isGranted('ROLE_ENSEIGNANT')) {
             return $this->render('security/accessDenied.html.twig');
         }
+
+        $user = $this->getUser();
+        if ($user === null) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $enseignant = $enseignantRepository->findOneBy(['username' => $user->getUserIdentifier()]);
+        if (!$enseignant) {
+            return $this->redirectToRoute('app_login', [
+                'message' => 'Vous devez être intervenant ou enseignant pour accéder à cette page.',
+            ]);
+        }
+
+        $departements = $enseignantDepartementRepository->findByEnseignant($enseignant);
+
+        if ('POST' === $request->getMethod()) {
+            $selectedDeptId = $request->request->get('departement');
+            $selected = $enseignantDepartementRepository->findOneBy([
+                'enseignant' => $enseignant,
+                'departement' => $selectedDeptId,
+            ]);
+
+            if ($selected === null || $selected->getDepartement() === null) {
+                $this->addFlash('danger', 'Vous n\'avez pas accès à ce département.');
+
+                return $this->redirectToRoute('app_choix_departement');
+            }
+
+            foreach ($departements as $ed) {
+                $ed->setDefaut($ed->getId() === $selected->getId());
+            }
+            $entityManager->flush();
+
+            $targetDepartement = $selected->getDepartement();
+            $session->getSession()->set('departement', $targetDepartement->getId());
+            $this->dataUserSession->setDepartement($targetDepartement);
+
+            $this->addFlash('success', sprintf(
+                'Département actif : %s (%s)',
+                $targetDepartement->getLibelle(),
+                $selected->getRole()->getLibelle()
+            ));
+
+            return $this->redirectToRoute('enseignant_dashboard');
+        }
+
+        return $this->render('security/choix-departement.html.twig', [
+            'departements' => $departements,
+            'user' => $user,
+        ]);
     }
 }
