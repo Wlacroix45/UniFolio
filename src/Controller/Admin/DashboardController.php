@@ -29,6 +29,7 @@ use App\Entity\TypeGroupe;
 use App\Entity\Users;
 use App\Entity\Validation;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -43,10 +44,16 @@ class DashboardController extends AbstractDashboardController
 {
     public function index(): Response
     {
-        $site = $_ENV['SITE'];
+        $site = $_ENV['SITE'] ?? '';
         return $this->render('Admin/dashboard.html.twig', [
             'site' => $site,
         ]);
+    }
+
+    public function configureAssets(): Assets
+    {
+        return parent::configureAssets()
+            ->addWebpackEncoreEntry('admin_import');
     }
 
     public function configureDashboard(): Dashboard
@@ -59,7 +66,7 @@ class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         // récupérer la variable SITE de .env
-        if ($_ENV['SITE'] === 'IUTTroyes') {
+        if (($_ENV['SITE'] ?? '') === 'IUTTroyes') {
             yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-home');
             yield MenuItem::linkToUrl('Site étudiant', 'fas fa-user', '/dashboard?_switch_user=etudiant');
             yield MenuItem::linkToUrl('Site enseignant', 'fas fa-user', '/dashboard?_switch_user=enseignant');
@@ -84,6 +91,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Utilisateurs');
         yield MenuItem::linkTo(EtudiantCrudController::class, 'Gestion des etudiants', 'fas fa-list');
         yield MenuItem::linkTo(EnseignantCrudController::class, 'Gestion des enseignants', 'fas fa-list');
+        yield MenuItem::linkTo(ImportUtilisateursController::class, 'Importer des utilisateurs', 'fas fa-file-csv')
+            ->setAction('index');
 
         yield MenuItem::section('Portfolios');
         yield MenuItem::linkTo(TraceCrudController::class, 'Gestion des traces', 'fas fa-list');

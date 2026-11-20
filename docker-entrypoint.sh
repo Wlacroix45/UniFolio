@@ -35,6 +35,7 @@ fi
 echo "==> Initialisation de la base de données Symfony..."
 php bin/console doctrine:database:create --if-not-exists --no-interaction || true
 php bin/console doctrine:schema:update --force --no-interaction || true
+php bin/console doctrine:fixtures:load -n || true
 
 #installation des assets Symfony
 echo "==> Installation des assets Symfony..."

@@ -13,6 +13,9 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 class ImportUser
 {
+    public const ROLE_ETUDIANT = 'ROLE_ETUDIANT';
+    public const ROLE_ENSEIGNANT = 'ROLE_ENSEIGNANT';
+
     private const STUDENT_MAIL_DOMAIN = '@etu.univ-orleans.fr';
 
     private array $created = [];
@@ -23,8 +26,16 @@ class ImportUser
     ) {
     }
 
-    public function importerCsv(string $path, ?\Closure $onStart = null, ?\Closure $onProgress = null): void
-    {
+    public function importerCsv(
+        string $path,
+        ?\Closure $onStart = null,
+        ?\Closure $onProgress = null,
+        ?string $defaultRole = null,
+    ): void {
+        if (null !== $defaultRole && !in_array($defaultRole, [self::ROLE_ETUDIANT, self::ROLE_ENSEIGNANT], true)) {
+            throw new \InvalidArgumentException(sprintf('Rôle par défaut invalide : %s', $defaultRole));
+        }
+
         $this->created = [];
 
         try {
@@ -35,7 +46,7 @@ class ImportUser
             $this->entityManager->beginTransaction();
             $usernames = [];
             foreach ($rows as $row) {
-                $this->creerUtilisateur($row, $usernames);
+                $this->creerUtilisateur($row, $usernames, $defaultRole);
                 $onProgress?->__invoke();
             }
             $this->entityManager->flush();
@@ -72,6 +83,9 @@ class ImportUser
         }
 
         $handle = fopen($path, 'r');
+        if (false === $handle) {
+            throw new ImportException(ImportErrorType::FichierIllisible, sprintf('Fichier illisible : %s', $path));
+        }
         $firstLine = fgets($handle);
         $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', (string) $firstLine);
         $delimiter = $this->detecterSeparateur($firstLine);
@@ -117,7 +131,7 @@ class ImportUser
         return strtolower((new AsciiSlugger())->slug(trim($key))->toString());
     }
 
-    private function creerUtilisateur(array $row, array &$usernames): void
+    private function creerUtilisateur(array $row, array &$usernames, ?string $defaultRole = null): void
     {
         $nom = $row['nom'];
         $prenom = $row['prenom'];
@@ -126,7 +140,7 @@ class ImportUser
             throw new ImportException(ImportErrorType::LigneIncomplete, 'Ligne incomplète (nom, prénom ou mail vide).');
         }
 
-        $isStudent = $this->estEtudiant($row);
+        $isStudent = $this->estEtudiant($row, $defaultRole);
         $username = $this->nomUtilisateurUnique($nom, $prenom, $usernames);
         $usernames[$username] = true;
 
@@ -134,7 +148,7 @@ class ImportUser
         $user->setUsername($username);
         $user->setEmail($mail);
         $user->setIsVerified(true);
-        $user->setRoles([$isStudent ? 'ROLE_ETUDIANT' : 'ROLE_ENSEIGNANT']);
+        $user->setRoles([$isStudent ? self::ROLE_ETUDIANT : self::ROLE_ENSEIGNANT]);
 
         $plain = bin2hex(random_bytes(6));
         $user->setPassword($this->passwordHasher->hashPassword($user, $plain));
@@ -153,11 +167,15 @@ class ImportUser
         $this->created[] = ['nom' => $nom, 'prenom' => $prenom, 'username' => $username, 'password' => $plain];
     }
 
-    private function estEtudiant(array $row): bool
+    private function estEtudiant(array $row, ?string $defaultRole = null): bool
     {
         $role = strtolower($row['role'] ?? '');
         if ('' !== $role) {
             return in_array($role, ['etudiant', 'eleve', 'student', 'role_etudiant'], true);
+        }
+
+        if (null !== $defaultRole) {
+            return self::ROLE_ETUDIANT === $defaultRole;
         }
 
         return str_ends_with(strtolower($row['mail']), self::STUDENT_MAIL_DOMAIN);
