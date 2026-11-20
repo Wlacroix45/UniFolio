@@ -36,10 +36,9 @@ final class PortfolioEvalTableComponent extends BaseController
 
 
     public function __construct(
-        public EtudiantRepository  $etudiantRepository,
+        public EtudiantRepository $etudiantRepository,
         public PortfolioRepository $portfolioRepository
-    )
-    {
+    ) {
     }
 
 
