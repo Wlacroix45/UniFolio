@@ -38,6 +38,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 use App\Classes\DataUserSession;
 use App\Entity\Departement;
 use App\Entity\Enseignant;
+use App\Entity\Users;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 
 #[AsLiveComponent('AllTraceEvalComponent')]
@@ -124,10 +125,9 @@ final class AllTraceEvalComponent extends BaseController
         $this->requestStack = $requestStack;
 
         $securityUser = $this->security->getUser();
-        $this->currentEnseignant = $securityUser?->getEnseignant();
-        $dept = $this->currentEnseignant
-            ? $this->departementRepository->findDepartementEnseignantDefaut($this->currentEnseignant)
-            : [];
+        $this->currentEnseignant = $securityUser instanceof Users ? $securityUser->getEnseignant() : null;
+        $activeDepartement = $this->dataUserSession->getDepartement();
+        $dept = $activeDepartement !== null ? [$activeDepartement] : [];
 
         foreach ($dept as $index => $departement) {
             if ($index === 0) {
@@ -254,7 +254,7 @@ final class AllTraceEvalComponent extends BaseController
         $semestreId = $this->selectedSemestre?->getId();
 
         $state = [
-            'dept' => $this->defaultDepartement?->getId(),
+            'dept' => $this->resolveDepartementForFilters()?->getId(),
             'semestre' => $semestreId,
             'competences' => array_map('intval', $this->selectedCompetences),
             'groupes' => array_map('intval', $this->selectedGroupes),
@@ -498,16 +498,7 @@ final class AllTraceEvalComponent extends BaseController
 
     private function resolveDepartementForFilters(): ?Departement
     {
-        $dept = $this->defaultDepartement;
-        if ($dept === null && $this->currentEnseignant !== null) {
-            $enseignantDept = $this->enseignantDepartementRepository->findOneBy([
-                'enseignant' => $this->currentEnseignant,
-                'defaut' => 1,
-            ]);
-            $dept = $enseignantDept?->getDepartement();
-        }
-
-        return $dept;
+        return $this->dataUserSession->getDepartement() ?? $this->defaultDepartement;
     }
 
     public function getTotalPages()

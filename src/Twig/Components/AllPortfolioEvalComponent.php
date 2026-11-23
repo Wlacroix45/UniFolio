@@ -16,6 +16,7 @@ use App\Entity\Enseignant;
 use App\Entity\Etudiant;
 use App\Entity\Groupe;
 use App\Entity\Semestre;
+use App\Entity\Users;
 use App\Repository\AnneeRepository;
 use App\Repository\ApcNiveauRepository;
 use App\Repository\CommentaireRepository;
@@ -125,10 +126,9 @@ class AllPortfolioEvalComponent extends BaseController
         $this->requestStack = $requestStack;
 
         $securityUser = $this->security->getUser();
-        $this->currentEnseignant = $securityUser?->getEnseignant();
-        $dept = $this->currentEnseignant
-            ? $this->departementRepository->findDepartementEnseignantDefaut($this->currentEnseignant)
-            : [];
+        $this->currentEnseignant = $securityUser instanceof Users ? $securityUser->getEnseignant() : null;
+        $activeDepartement = $this->dataUserSession->getDepartement();
+        $dept = $activeDepartement !== null ? [$activeDepartement] : [];
 
         foreach ($dept as $index => $departement) {
             if ($index === 0) {
@@ -254,7 +254,7 @@ class AllPortfolioEvalComponent extends BaseController
     private function getFiltersCacheKey(): string
     {
         $state = [
-            'dept' => $this->defaultDepartement?->getId(),
+            'dept' => $this->resolveDepartementForFilters()?->getId(),
             'semestre' => $this->selectedSemestre?->getId(),
             'competences' => array_map('intval', $this->selectedCompetences),
             'groupes' => array_map('intval', $this->selectedGroupes),
@@ -272,16 +272,7 @@ class AllPortfolioEvalComponent extends BaseController
 
     private function resolveDepartementForFilters(): ?Departement
     {
-        $dept = $this->defaultDepartement;
-        if ($dept === null && $this->currentEnseignant !== null) {
-            $enseignantDept = $this->enseignantDepartementRepository->findOneBy([
-                'enseignant' => $this->currentEnseignant,
-                'defaut' => 1,
-            ]);
-            $dept = $enseignantDept?->getDepartement();
-        }
-
-        return $dept;
+        return $this->dataUserSession->getDepartement() ?? $this->defaultDepartement;
     }
 
     #[PostMount]

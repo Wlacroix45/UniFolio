@@ -3,8 +3,10 @@
 namespace App\Tests\Command;
 
 use App\Command\ImportUsersCommand;
+use App\Entity\Departement;
 use App\Exception\ImportErrorType;
 use App\Exception\ImportException;
+use App\Repository\DepartementRepository;
 use App\Service\ExportIdentifiants;
 use App\Service\ImportUser;
 use PHPUnit\Framework\TestCase;
@@ -27,9 +29,9 @@ class ImportUsersCommandTest extends TestCase
         rmdir($this->dossier);
     }
 
-    private function tester(ImportUser $import): CommandTester
+    private function tester(ImportUser $import, ?DepartementRepository $departementRepository = null): CommandTester
     {
-        return new CommandTester(new ImportUsersCommand($import, new ExportIdentifiants(), $this->dossier));
+        return new CommandTester(new ImportUsersCommand($import, new ExportIdentifiants(), $this->dossier, $departementRepository));
     }
 
     private function importAvecComptes(): ImportUser
@@ -88,5 +90,45 @@ class ImportUsersCommandTest extends TestCase
 
         $this->assertSame(1, $tester->execute(['--path' => $this->dossier . '/a.csv', '--export' => '/inexistant/x.csv']));
         $this->assertStringContainsString('[ecriture_impossible]', $tester->getDisplay());
+    }
+
+    public function testImportAvecOptionDepartement(): void
+    {
+        $departement = (new Departement())->setLibelle('MMI');
+        $deptRepo = $this->createStub(DepartementRepository::class);
+        $deptRepo->method('findOneBy')->with(['libelle' => 'MMI'])->willReturn($departement);
+
+        $import = $this->createMock(ImportUser::class);
+        $import->expects($this->once())
+            ->method('importerCsv')
+            ->with(
+                $this->dossier . '/a.csv',
+                $this->anything(),
+                $this->anything(),
+                null,
+                $departement
+            )
+            ->willReturnCallback(static function (string $path, callable $onStart, callable $onProgress): void {
+                $onStart(1);
+                $onProgress();
+            });
+        $import->method('getComptesCrees')->willReturn([]);
+        $import->method('getLignesComptesCrees')->willReturn([]);
+
+        $tester = $this->tester($import, $deptRepo);
+
+        $this->assertSame(0, $tester->execute(['--path' => $this->dossier . '/a.csv', '--departement' => 'MMI']));
+    }
+
+    public function testErreurDepartementIntrouvable(): void
+    {
+        $deptRepo = $this->createStub(DepartementRepository::class);
+        $deptRepo->method('findOneBy')->willReturn(null);
+        $deptRepo->method('findAll')->willReturn([]);
+
+        $tester = $this->tester($this->createStub(ImportUser::class), $deptRepo);
+
+        $this->assertSame(1, $tester->execute(['--path' => $this->dossier . '/a.csv', '--departement' => 'INCONNU']));
+        $this->assertStringContainsString('Département introuvable', $tester->getDisplay());
     }
 }

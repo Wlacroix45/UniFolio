@@ -2,7 +2,9 @@
 
 namespace App\Form;
 
+use App\Entity\Departement;
 use App\Service\ImportUser;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -26,15 +28,29 @@ class ImportUtilisateursType extends AbstractType
                 'choices' => [
                     'Automatique (colonne « role » du CSV ou domaine étudiant)' => self::ROLE_AUTO,
                     'Étudiant (ROLE_ETUDIANT)' => ImportUser::ROLE_ETUDIANT,
-                    'Enseignant (ROLE_ENSEIGNANT)' => ImportUser::ROLE_ENSEIGNANT,
+                    'Enseignant — Évaluateur (ROLE_EVALUATEUR)' => ImportUser::ROLE_EVALUATEUR,
+                    'Enseignant — Éditeur (ROLE_EDITEUR)' => ImportUser::ROLE_EDITEUR,
                 ],
                 'help' => 'Utilisé lorsque la colonne « role » est absente ou vide. Si le CSV contient une colonne « role », celle-ci reste prioritaire.',
                 'constraints' => [
                     new Choice(
-                        choices: [self::ROLE_AUTO, ImportUser::ROLE_ETUDIANT, ImportUser::ROLE_ENSEIGNANT],
+                        choices: [
+                            self::ROLE_AUTO,
+                            ImportUser::ROLE_ETUDIANT,
+                            ImportUser::ROLE_EVALUATEUR,
+                            ImportUser::ROLE_EDITEUR,
+                        ],
                         message: 'Le rôle sélectionné est invalide.',
                     ),
                 ],
+            ])
+            ->add('defaultDepartement', EntityType::class, [
+                'class' => Departement::class,
+                'choice_label' => 'libelle',
+                'label' => 'Département par défaut (enseignants)',
+                'required' => false,
+                'placeholder' => 'Aucun (colonne « departement » du CSV)',
+                'help' => 'Attribué par défaut aux enseignants importés lorsque la colonne « departement » est absente ou vide.',
             ])
             ->add('fichier', FileType::class, [
                 'label' => 'Fichier CSV des utilisateurs',

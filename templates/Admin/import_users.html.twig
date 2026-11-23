@@ -62,6 +62,10 @@
                     </div>
 
                     <div class="mb-4">
+                        {{ form_row(form.defaultDepartement) }}
+                    </div>
+
+                    <div class="mb-4">
                         {{ form_label(form.fichier, null, { label_attr: { class: 'form-label fw-semibold' } }) }}
 
                         <label for="{{ form.fichier.vars.id }}"
@@ -132,8 +136,10 @@
                         <code>nom</code>, <code>prenom</code>, <code>mail</code>
                     </p>
                     <p class="mb-2">
-                        <strong>Colonne optionnelle :</strong>
-                        <code>role</code> (<code>etudiant</code> ou <code>enseignant</code>)
+                        <strong>Colonnes optionnelles :</strong>
+                        <code>role</code> (<code>etudiant</code>, <code>enseignant</code>, <code>evaluateur</code> ou <code>editeur</code>),
+                        <code>departement</code> (libellé ou ID),
+                        <code>role_departement</code> (<code>evaluateur</code> ou <code>editeur</code>)
                     </p>
                     <p class="mb-3 text-muted">
                         Les séparateurs <code>;</code>, <code>,</code> et tabulation sont détectés automatiquement (encodage UTF-8 recommandé).

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Departement;
 use App\Exception\ImportErrorType;
 use App\Exception\ImportException;
 use App\Form\ImportUtilisateursType;
@@ -56,9 +57,15 @@ class ImportUtilisateursController extends AbstractController
         $uploadedFile = $form->get('fichier')->getData();
         $selectedRole = (string) ($form->get('defaultRole')->getData() ?? '');
         $defaultRole = ImportUtilisateursType::ROLE_AUTO === $selectedRole ? null : $selectedRole;
+        /** @var ?Departement $defaultDepartement */
+        $defaultDepartement = $form->get('defaultDepartement')->getData();
 
         try {
-            $this->importUser->importerCsv($uploadedFile->getPathname(), defaultRole: $defaultRole);
+            $this->importUser->importerCsv(
+                $uploadedFile->getPathname(),
+                defaultRole: $defaultRole,
+                defaultDepartement: $defaultDepartement,
+            );
             $comptes = $this->importUser->getComptesCrees();
             if ([] === $comptes) {
                 throw new ImportException(ImportErrorType::AucunCompte, "Le fichier CSV ne contient aucune ligne d'utilisateur à importer.");
@@ -121,7 +128,9 @@ class ImportUtilisateursController extends AbstractController
     #[AdminRoute(path: '/modele', name: 'template', options: ['methods' => ['GET']])]
     public function template(): Response
     {
-        $content = "\xEF\xBB\xBFnom;prenom;mail;role\nDupont;Jean;jean.dupont@etu.univ-orleans.fr;etudiant\nMartin;Claire;claire.martin@univ-reims.fr;enseignant\n";
+        $content = "\xEF\xBB\xBFnom;prenom;mail;role;departement;role_departement\n"
+            . "Dupont;Jean;jean.dupont@etu.univ-orleans.fr;etudiant;;\n"
+            . "Martin;Claire;claire.martin@univ-reims.fr;enseignant;MMI;evaluateur\n";
         $response = new Response($content);
         $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
         $response->headers->set('Content-Disposition', $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'modele_import_utilisateurs.csv'));

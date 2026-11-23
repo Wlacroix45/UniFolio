@@ -2,7 +2,9 @@
 
 namespace App\Command;
 
+use App\Entity\Departement;
 use App\Exception\ImportException;
+use App\Repository\DepartementRepository;
 use App\Service\ExportIdentifiants;
 use App\Service\ImportUser;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -26,6 +28,7 @@ class ImportUsersCommand extends Command
         private readonly ExportIdentifiants $exportIdentifiants,
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
+        private readonly ?DepartementRepository $departementRepository = null,
     ) {
         parent::__construct();
     }
@@ -34,13 +37,25 @@ class ImportUsersCommand extends Command
     {
         $this
             ->addOption('path', 'p', InputOption::VALUE_REQUIRED, "Chemin d'un fichier CSV ou d'un répertoire de CSV (défaut : import_csv/ à la racine du projet)")
-            ->addOption('export', null, InputOption::VALUE_REQUIRED, 'Fichier CSV où écrire les identifiants créés');
+            ->addOption('export', null, InputOption::VALUE_REQUIRED, 'Fichier CSV où écrire les identifiants créés')
+            ->addOption('departement', 'd', InputOption::VALUE_REQUIRED, 'Département par défaut (ID ou libellé) pour les enseignants importés');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $path = $input->getOption('path') ?? $this->projectDir . self::DEFAULT_DIRECTORY;
+
+        $defaultDepartement = null;
+        $departementOption = $input->getOption('departement');
+        if (null !== $departementOption && '' !== trim((string) $departementOption)) {
+            $defaultDepartement = $this->resoudreDepartement(trim((string) $departementOption));
+            if (null === $defaultDepartement) {
+                $io->error(sprintf('Département introuvable : %s', $departementOption));
+
+                return Command::FAILURE;
+            }
+        }
 
         $files = is_dir($path) ? glob(rtrim($path, '/') . '/*.csv') : (is_file($path) ? [$path] : []);
         if (!$files) {
@@ -54,7 +69,12 @@ class ImportUsersCommand extends Command
         foreach ($files as $file) {
             $io->section(basename($file));
             try {
-                $this->importUser->importerCsv($file, $io->progressStart(...), $io->progressAdvance(...));
+                $this->importUser->importerCsv(
+                    $file,
+                    $io->progressStart(...),
+                    $io->progressAdvance(...),
+                    defaultDepartement: $defaultDepartement,
+                );
                 $io->progressFinish();
             } catch (ImportException $e) {
                 $this->afficherErreur($io, $e);
@@ -83,5 +103,30 @@ class ImportUsersCommand extends Command
     private function afficherErreur(SymfonyStyle $io, ImportException $e): void
     {
         $io->error(sprintf('[%s] %s', $e->getType()->value, $e->getMessage()));
+    }
+
+    private function resoudreDepartement(string $value): ?Departement
+    {
+        if (null === $this->departementRepository) {
+            return null;
+        }
+
+        if (ctype_digit($value)) {
+            return $this->departementRepository->find((int) $value);
+        }
+
+        $departement = $this->departementRepository->findOneBy(['libelle' => $value]);
+        if (null !== $departement) {
+            return $departement;
+        }
+
+        $needle = mb_strtolower($value);
+        foreach ($this->departementRepository->findAll() as $candidate) {
+            if (mb_strtolower((string) $candidate->getLibelle()) === $needle) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }

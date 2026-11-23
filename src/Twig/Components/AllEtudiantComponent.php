@@ -130,8 +130,8 @@ class AllEtudiantComponent extends BaseController
         $this->mailer = $mailer;
         $this->requestStack = $requestStack;
 
-        $user = $this->security->getUser()->getEnseignant();
-        $dept = $this->departementRepository->findDepartementEnseignantDefaut($user);
+        $activeDepartement = $this->dataUserSession->getDepartement();
+        $dept = $activeDepartement !== null ? [$activeDepartement] : [];
         foreach ($dept as $departement) {
             $this->annees = $this->anneeRepository->findByDepartement($departement);
             $this->semestres = $this->semestreRepository->findByDepartementActif($departement);
@@ -224,13 +224,11 @@ class AllEtudiantComponent extends BaseController
         $this->selectedSemestreId = $id !== 0 ? $id : null;
         $this->resolveSelectedSemestre();
 
-        $user = $this->security->getUser()->getEnseignant();
-        $dept = $this->departementRepository->findDepartementEnseignantDefaut($user);
-        $referentiel = null;
-        foreach ($dept as $departement) {
-            $referentiel = $departement->getApcReferentiels()->first();
-        }
-        $competences = $this->competenceRepository->findBy(['referentiel' => $referentiel]);
+        $activeDepartement = $this->dataUserSession->getDepartement();
+        $referentiel = $activeDepartement?->getApcReferentiels()->first() ?: null;
+        $competences = $referentiel !== null
+            ? $this->competenceRepository->findBy(['referentiel' => $referentiel])
+            : [];
 
         //si un semestre est sélectionné
         if ($id !== null) {
@@ -324,10 +322,10 @@ class AllEtudiantComponent extends BaseController
         $this->niveaux = [];
         $competencesNiveau = [];
         $dept = $this->dataUserSession->getDepartement();
-
-        $referentiel = $dept->getApcReferentiels();
-
-        $competences = $this->competenceRepository->findBy(['referentiel' => $referentiel->first()]);
+        $referentiel = $dept?->getApcReferentiels()->first() ?: null;
+        $competences = $referentiel !== null
+            ? $this->competenceRepository->findBy(['referentiel' => $referentiel])
+            : [];
 
 
         foreach ($groupes as $groupe) {
@@ -558,13 +556,14 @@ class AllEtudiantComponent extends BaseController
 
     public function getAllEtudiant()
     {
-//        $dept = $this->dataUserSession->getDepartement();
-        $user = $this->getUser();
-        $enseignant = $user->getEnseignant();
+        $dept = $this->dataUserSession->getDepartement();
+        if ($dept === null) {
+            $this->currentPage = 0;
 
-        $dept = $this->enseignantDepartementRepository->findOneBy(['enseignant' => $enseignant, 'defaut' => 1]);
+            return [];
+        }
 
-        $etudiants = $this->etudiantRepository->findByFilters($dept->getDepartement(), $this->selectedSemestre, $this->selectedGroupes, $this->selectedEtudiants, $this->selectedCompetences, $this->selectedEtat);
+        $etudiants = $this->etudiantRepository->findByFilters($dept, $this->selectedSemestre, $this->selectedGroupes, $this->selectedEtudiants, $this->selectedCompetences, $this->selectedEtat);
 
         if ($etudiants === null) {
             $this->currentPage = 0;
