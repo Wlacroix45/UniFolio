@@ -2,7 +2,9 @@
 
 namespace App\Tests\Service;
 
+use App\Entity\Departement;
 use App\Entity\Users;
+use App\Enum\DepartementRoleEnum;
 use App\Exception\ImportErrorType;
 use App\Exception\ImportException;
 use App\Service\ImportUser;
@@ -16,17 +18,22 @@ class ImportUserTest extends TestCase
 {
     private string $csv;
     private EntityManagerInterface $em;
+    private EntityRepository $deptRepository;
     private ImportUser $service;
 
     protected function setUp(): void
     {
         $this->csv = tempnam(sys_get_temp_dir(), 'import_');
 
-        $repository = $this->createStub(EntityRepository::class);
+        $userRepository = $this->createStub(EntityRepository::class);
+        $this->deptRepository = $this->createStub(EntityRepository::class);
         $connection = $this->createStub(Connection::class);
         $connection->method('isTransactionActive')->willReturn(true);
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->em->method('getRepository')->with(Users::class)->willReturn($repository);
+        $this->em->method('getRepository')->willReturnMap([
+            [Users::class, $userRepository],
+            [Departement::class, $this->deptRepository],
+        ]);
         $this->em->method('getConnection')->willReturn($connection);
 
         $hasher = $this->createStub(UserPasswordHasherInterface::class);
@@ -110,10 +117,25 @@ class ImportUserTest extends TestCase
             $persisted = $user;
         });
 
-        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_ENSEIGNANT);
+        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_EVALUATEUR);
 
         $this->assertInstanceOf(Users::class, $persisted);
-        $this->assertContains(ImportUser::ROLE_ENSEIGNANT, $persisted->getRoles());
+        $this->assertContains(ImportUser::ROLE_EVALUATEUR, $persisted->getRoles());
+        $this->assertNotNull($persisted->getEnseignant());
+    }
+
+    public function testDefaultRoleEditeurSurDomaineEtudiant(): void
+    {
+        file_put_contents($this->csv, "nom;prenom;mail\nDupont;Jean;jean@etu.univ-orleans.fr\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_EDITEUR);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_EDITEUR, $persisted->getRoles());
         $this->assertNotNull($persisted->getEnseignant());
     }
 
@@ -128,8 +150,70 @@ class ImportUserTest extends TestCase
         $this->service->importerCsv($this->csv, defaultRole: ImportUser::ROLE_ETUDIANT);
 
         $this->assertInstanceOf(Users::class, $persisted);
-        $this->assertContains(ImportUser::ROLE_ENSEIGNANT, $persisted->getRoles());
+        $this->assertContains(ImportUser::ROLE_EVALUATEUR, $persisted->getRoles());
         $this->assertNotNull($persisted->getEnseignant());
+    }
+
+    public function testImportEnseignantAvecColonneDepartementEtRoleDepartement(): void
+    {
+        $departement = (new Departement())->setLibelle('MMI');
+        $this->deptRepository->method('findOneBy')->with(['libelle' => 'MMI'])->willReturn($departement);
+
+        file_put_contents($this->csv, "nom;prenom;mail;role;departement;role_departement\nDupont;Jean;jean@x.fr;enseignant;MMI;editeur\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_EDITEUR, $persisted->getRoles());
+        $enseignant = $persisted->getEnseignant();
+        $this->assertNotNull($enseignant);
+        $this->assertCount(1, $enseignant->getEnseignantDepartements());
+        $ed = $enseignant->getEnseignantDepartements()->first();
+        $this->assertSame($departement, $ed->getDepartement());
+        $this->assertSame(DepartementRoleEnum::EDITEUR, $ed->getRole());
+        $this->assertTrue($ed->isDefaut());
+    }
+
+    public function testImportEnseignantAvecDefaultDepartement(): void
+    {
+        $departement = (new Departement())->setLibelle('INFO');
+        file_put_contents($this->csv, "nom;prenom;mail;role\nMartin;Claire;claire@x.fr;enseignant\n");
+        $persisted = null;
+        $this->em->expects($this->once())->method('persist')->willReturnCallback(function (Users $user) use (&$persisted): void {
+            $persisted = $user;
+        });
+
+        $this->service->importerCsv($this->csv, defaultDepartement: $departement);
+
+        $this->assertInstanceOf(Users::class, $persisted);
+        $this->assertContains(ImportUser::ROLE_EVALUATEUR, $persisted->getRoles());
+        $ed = $persisted->getEnseignant()->getEnseignantDepartements()->first();
+        $this->assertSame($departement, $ed->getDepartement());
+        $this->assertSame(DepartementRoleEnum::EVALUATEUR, $ed->getRole());
+        $this->assertTrue($ed->isDefaut());
+    }
+
+    public function testImportEnseignantAvecDepartementInconnuLeveException(): void
+    {
+        $this->deptRepository->method('findOneBy')->willReturn(null);
+        $this->deptRepository->method('findAll')->willReturn([]);
+
+        $this->assertSame(
+            ImportErrorType::DonneesInvalides,
+            $this->erreur("nom;prenom;mail;role;departement\nDupont;Jean;jean@x.fr;enseignant;INCONNU\n")
+        );
+    }
+
+    public function testImportEnseignantAvecRoleDepartementInvalideLeveException(): void
+    {
+        $this->assertSame(
+            ImportErrorType::DonneesInvalides,
+            $this->erreur("nom;prenom;mail;role;role_departement\nDupont;Jean;jean@x.fr;enseignant;superadmin\n")
+        );
     }
 
     public function testDefaultRoleInvalideLeveException(): void

@@ -2,9 +2,11 @@
 
 namespace App\Service;
 
+use App\Entity\Departement;
 use App\Entity\Enseignant;
 use App\Entity\Etudiant;
 use App\Entity\Users;
+use App\Enum\DepartementRoleEnum;
 use App\Exception\ImportErrorType;
 use App\Exception\ImportException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +16,16 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 class ImportUser
 {
     public const ROLE_ETUDIANT = 'ROLE_ETUDIANT';
+    public const ROLE_EVALUATEUR = 'ROLE_EVALUATEUR';
+    public const ROLE_EDITEUR = 'ROLE_EDITEUR';
     public const ROLE_ENSEIGNANT = 'ROLE_ENSEIGNANT';
+
+    private const ALLOWED_DEFAULT_ROLES = [
+        self::ROLE_ETUDIANT,
+        self::ROLE_EVALUATEUR,
+        self::ROLE_EDITEUR,
+        self::ROLE_ENSEIGNANT,
+    ];
 
     private const STUDENT_MAIL_DOMAIN = '@etu.univ-orleans.fr';
 
@@ -31,8 +42,9 @@ class ImportUser
         ?\Closure $onStart = null,
         ?\Closure $onProgress = null,
         ?string $defaultRole = null,
+        ?Departement $defaultDepartement = null,
     ): void {
-        if (null !== $defaultRole && !in_array($defaultRole, [self::ROLE_ETUDIANT, self::ROLE_ENSEIGNANT], true)) {
+        if (null !== $defaultRole && !in_array($defaultRole, self::ALLOWED_DEFAULT_ROLES, true)) {
             throw new \InvalidArgumentException(sprintf('Rôle par défaut invalide : %s', $defaultRole));
         }
 
@@ -46,7 +58,7 @@ class ImportUser
             $this->entityManager->beginTransaction();
             $usernames = [];
             foreach ($rows as $row) {
-                $this->creerUtilisateur($row, $usernames, $defaultRole);
+                $this->creerUtilisateur($row, $usernames, $defaultRole, $defaultDepartement);
                 $onProgress?->__invoke();
             }
             $this->entityManager->flush();
@@ -131,8 +143,12 @@ class ImportUser
         return strtolower((new AsciiSlugger())->slug(trim($key))->toString());
     }
 
-    private function creerUtilisateur(array $row, array &$usernames, ?string $defaultRole = null): void
-    {
+    private function creerUtilisateur(
+        array $row,
+        array &$usernames,
+        ?string $defaultRole = null,
+        ?Departement $defaultDepartement = null,
+    ): void {
         $nom = $row['nom'];
         $prenom = $row['prenom'];
         $mail = $row['mail'];
@@ -141,6 +157,7 @@ class ImportUser
         }
 
         $isStudent = $this->estEtudiant($row, $defaultRole);
+        $deptRole = $isStudent ? null : $this->resoudreRoleDepartement($row, $defaultRole);
         $username = $this->nomUtilisateurUnique($nom, $prenom, $usernames);
         $usernames[$username] = true;
 
@@ -148,7 +165,7 @@ class ImportUser
         $user->setUsername($username);
         $user->setEmail($mail);
         $user->setIsVerified(true);
-        $user->setRoles([$isStudent ? self::ROLE_ETUDIANT : self::ROLE_ENSEIGNANT]);
+        $user->setRoles([$isStudent ? self::ROLE_ETUDIANT : $deptRole->value]);
 
         $plain = bin2hex(random_bytes(6));
         $user->setPassword($this->passwordHasher->hashPassword($user, $plain));
@@ -161,6 +178,11 @@ class ImportUser
             $person = (new Enseignant())->setNom($nom)->setPrenom($prenom)->setMailUniv($mail);
             $person->setUsername($username);
             $user->setEnseignant($person);
+
+            $departement = $this->resoudreDepartement($row, $defaultDepartement);
+            if (null !== $departement) {
+                $person->addDepartement($departement, $deptRole, true);
+            }
         }
 
         $this->entityManager->persist($user);
@@ -169,9 +191,9 @@ class ImportUser
 
     private function estEtudiant(array $row, ?string $defaultRole = null): bool
     {
-        $role = strtolower($row['role'] ?? '');
+        $role = mb_strtolower(trim((string) ($row['role'] ?? '')));
         if ('' !== $role) {
-            return in_array($role, ['etudiant', 'eleve', 'student', 'role_etudiant'], true);
+            return in_array($role, ['etudiant', 'étudiant', 'eleve', 'élève', 'student', 'role_etudiant'], true);
         }
 
         if (null !== $defaultRole) {
@@ -179,6 +201,70 @@ class ImportUser
         }
 
         return str_ends_with(strtolower($row['mail']), self::STUDENT_MAIL_DOMAIN);
+    }
+
+    private function resoudreRoleDepartement(array $row, ?string $defaultRole = null): DepartementRoleEnum
+    {
+        $roleDept = mb_strtolower(trim((string) ($row['role-departement'] ?? $row['role_departement'] ?? '')));
+        if ('' !== $roleDept) {
+            if (in_array($roleDept, ['editeur', 'éditeur', 'role_editeur'], true)) {
+                return DepartementRoleEnum::EDITEUR;
+            }
+            if (in_array($roleDept, ['evaluateur', 'évaluateur', 'role_evaluateur'], true)) {
+                return DepartementRoleEnum::EVALUATEUR;
+            }
+
+            throw new ImportException(
+                ImportErrorType::DonneesInvalides,
+                sprintf('Rôle département invalide : %s', $roleDept)
+            );
+        }
+
+        $role = mb_strtolower(trim((string) ($row['role'] ?? '')));
+        if (in_array($role, ['editeur', 'éditeur', 'role_editeur'], true)) {
+            return DepartementRoleEnum::EDITEUR;
+        }
+        if (in_array($role, ['evaluateur', 'évaluateur', 'role_evaluateur'], true)) {
+            return DepartementRoleEnum::EVALUATEUR;
+        }
+
+        if (self::ROLE_EDITEUR === $defaultRole) {
+            return DepartementRoleEnum::EDITEUR;
+        }
+
+        return DepartementRoleEnum::EVALUATEUR;
+    }
+
+    private function resoudreDepartement(array $row, ?Departement $defaultDepartement = null): ?Departement
+    {
+        $deptValue = trim((string) ($row['departement'] ?? ''));
+        if ('' === $deptValue) {
+            return $defaultDepartement;
+        }
+
+        $repository = $this->entityManager->getRepository(Departement::class);
+        $departement = ctype_digit($deptValue)
+            ? $repository->find((int) $deptValue)
+            : $repository->findOneBy(['libelle' => $deptValue]);
+
+        if (null === $departement && !ctype_digit($deptValue)) {
+            $needle = mb_strtolower($deptValue);
+            foreach ($repository->findAll() as $candidate) {
+                if (mb_strtolower((string) $candidate->getLibelle()) === $needle) {
+                    $departement = $candidate;
+                    break;
+                }
+            }
+        }
+
+        if (null === $departement) {
+            throw new ImportException(
+                ImportErrorType::DonneesInvalides,
+                sprintf('Département introuvable : %s', $deptValue)
+            );
+        }
+
+        return $departement;
     }
 
     private function nomUtilisateurUnique(string $nom, string $prenom, array $taken): string

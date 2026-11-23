@@ -112,6 +112,7 @@ class ImportUtilisateursControllerTest extends WebTestCase
         $this->assertSelectorExists('[data-controller="import-users"]');
         $this->assertSelectorExists('[data-import-users-target="dropzone"]');
         $this->assertSelectorExists('select[name="import_utilisateurs[defaultRole]"]');
+        $this->assertSelectorExists('select[name="import_utilisateurs[defaultDepartement]"]');
         $this->assertSelectorExists('input[type="file"][name="import_utilisateurs[fichier]"]');
         $this->assertGreaterThan(0, $crawler->filter('a[href="/admin/import-utilisateurs/modele"]')->count());
     }
@@ -128,7 +129,8 @@ class ImportUtilisateursControllerTest extends WebTestCase
                 $this->isString(),
                 null,
                 null,
-                ImportUser::ROLE_ETUDIANT
+                ImportUser::ROLE_ETUDIANT,
+                null
             );
         $importUser->method('getComptesCrees')->willReturn([
             ['nom' => 'Dupont', 'prenom' => 'Jean', 'username' => 'dupont.jean', 'password' => 'secret12'],
@@ -320,7 +322,7 @@ class ImportUtilisateursControllerTest extends WebTestCase
             'modele_import_utilisateurs.csv',
             (string) $client->getResponse()->headers->get('Content-Disposition')
         );
-        $this->assertStringContainsString('nom;prenom;mail;role', (string) $client->getResponse()->getContent());
+        $this->assertStringContainsString('nom;prenom;mail;role;departement;role_departement', (string) $client->getResponse()->getContent());
     }
 
     public function testTelechargementSansJetonValideRedirigeAvecErreur(): void
