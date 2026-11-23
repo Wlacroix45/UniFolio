@@ -1,4 +1,4 @@
-FROM php:8.4-apache-bookworm AS app_base
+FROM php:8.6-apache-bookworm AS app_base
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
 	APP_ENV=dev \
@@ -13,14 +13,11 @@ RUN apt-get update \
 		libpng-dev \
 		libxml2-dev \
 		libzip-dev \
-		nodejs \
-		npm \
 		unzip \
 	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
 	&& docker-php-ext-install -j"$(nproc)" \
 		gd \
 		intl \
-		opcache \
 		pdo_mysql \
 		zip \
 	&& a2enmod rewrite \
@@ -34,6 +31,11 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Webpack Encore 7 requires Node ^22.18 || ^24.11 (Debian bookworm ships Node 18)
+COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+	&& ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 RUN curl -sS https://get.symfony.com/cli/installer | bash \
 	&& mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
 
