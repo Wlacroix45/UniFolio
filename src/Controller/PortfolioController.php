@@ -41,18 +41,16 @@ use Symfony\Contracts\Service\Attribute\Required;
 class PortfolioController extends BaseController
 {
     public function __construct(
-        #[Required] public Security  $security,
-        DataUserSession              $dataUserSession,
+        #[Required] public Security $security,
+        DataUserSession $dataUserSession,
         private FormFactoryInterface $formFactory,
-    )
-    {
+    ) {
     }
 
     #[Route('etudiant/portfolio', name: 'app_portfolio')]
     public function index(
         PortfolioRepository $portfolioRepository,
-    ): Response
-    {
+    ): Response {
         if ($this->isGranted('ROLE_ETUDIANT')) {
             $data_user = $this->dataUserSession;
 
@@ -71,14 +69,13 @@ class PortfolioController extends BaseController
 
     #[Route('/portfolio/show', name: 'app_portfolio_index')]
     public function indexShow(
-        Request                  $request,
-        PortfolioRepository      $portfolioRepository,
-        CommentaireRepository    $commentaireRepository,
-        TraceRepository          $traceRepository,
-        NotificationRepository   $notificationRepository,
+        Request $request,
+        PortfolioRepository $portfolioRepository,
+        CommentaireRepository $commentaireRepository,
+        TraceRepository $traceRepository,
+        NotificationRepository $notificationRepository,
         EventDispatcherInterface $eventDispatcher
-    ): Response
-    {
+    ): Response {
         $data_user = $this->dataUserSession;
         $id = $request->query->get('id');
 
@@ -150,17 +147,16 @@ class PortfolioController extends BaseController
 
     #[Route('/portfolio/show/{id}', name: 'app_portfolio_show')]
     public function show(
-        PortfolioRepository   $portfolioRepository,
-        OrdrePageRepository   $ordrePageRepository,
-        PageRepository        $pageRepository,
-        OrdreTraceRepository  $ordreTraceRepository,
-        Request               $request,
+        PortfolioRepository $portfolioRepository,
+        OrdrePageRepository $ordrePageRepository,
+        PageRepository $pageRepository,
+        OrdreTraceRepository $ordreTraceRepository,
+        Request $request,
         DepartementRepository $departementRepository,
-        CompetenceRepository  $competenceRepository,
-        ApcNiveauRepository   $apcNiveauRepository,
-                              $id
-    ): Response
-    {
+        CompetenceRepository $competenceRepository,
+        ApcNiveauRepository $apcNiveauRepository,
+        $id
+    ): Response {
         $data_user = $this->dataUserSession;
         $step = $request->query->get('step', 'portfolio');
 
@@ -282,10 +278,9 @@ class PortfolioController extends BaseController
 
     #[Route('/old/portfolio/show/{id}', name: 'app_old_portfolio_show')]
     public function oldShow(
-        PortfolioRepository   $portfolioRepository,
-                              $id
-    ): Response
-    {
+        PortfolioRepository $portfolioRepository,
+        $id
+    ): Response {
         $portfolio = $portfolioRepository->findOneBy(['id' => $id]);
 
         return $this->render('portfolio/old_show.html.twig', [
@@ -295,11 +290,10 @@ class PortfolioController extends BaseController
 
     #[Route('etudiant/portfolio/new', name: 'app_portfolio_new')]
     public function new(
-        Request             $request,
+        Request $request,
         PortfolioRepository $portfolioRepository,
-        Security            $security
-    ): Response
-    {
+        Security $security
+    ): Response {
 
         if ($this->isGranted('ROLE_ETUDIANT')) {
             $data_user = $this->dataUserSession;
@@ -369,14 +363,12 @@ class PortfolioController extends BaseController
     #[Route('etudiant/portfolio/delete/{id}', name: 'app_portfolio_delete')]
     public function delete(
         PortfolioRepository $portfolioRepository,
-        int                 $id
-    ): Response
-    {
+        int $id
+    ): Response {
         $portfolio = $portfolioRepository->findOneBy(['id' => $id]);
         $user = $this->security->getUser()->getEtudiant();
 
         if ($this->isGranted('ROLE_ETUDIANT') && $portfolio->getEtudiant() == $user) {
-
             $portfolioRepository->remove($portfolio, true);
             $document = $portfolio->getBanniere();
             if ($document !== $_ENV['SRC_FILES'] . '/banniere.jpg') {
@@ -394,10 +386,9 @@ class PortfolioController extends BaseController
 
     #[Route('enseignant/portfolio/delete/{id}', name: 'app_delete_commentaire')]
     public function deleteComment(
-        Request               $request,
+        Request $request,
         CommentaireRepository $commentaireRepository
-    )
-    {
+    ) {
         if ($this->isGranted('ROLE_ENSEIGNANT')) {
             $commentaireId = $request->get('id');
             $commentaire = $commentaireRepository->find($commentaireId);
@@ -492,5 +483,4 @@ class PortfolioController extends BaseController
             ]
         );
     }
-
 }

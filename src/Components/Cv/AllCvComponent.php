@@ -15,10 +15,11 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 #[AsTwigComponent('all_cv')]
 class AllCvComponent
 {
-public function __construct(
-    protected CvRepository $cvRepository,
-    #[Required] public Security $security,
-) {}
+    public function __construct(
+        protected CvRepository $cvRepository,
+        #[Required] public Security $security,
+    ) {
+    }
 
 
     public function getAllCv(): array

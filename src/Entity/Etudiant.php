@@ -483,5 +483,4 @@ class Etudiant
     {
         $this->notifications = $notifications;
     }
-
 }
