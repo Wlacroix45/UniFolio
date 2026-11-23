@@ -59,9 +59,9 @@ Une fois les conteneurs lancés, ouvrez votre navigateur à l'adresse :
 
 ### Prérequis
 
-- PHP 8.4 ou supérieur
+- PHP 8.6 ou supérieur
 - Composer
-- Node.js et npm (ou yarn)
+- Node.js 22.18.0 | 24.11.0 | >= 26.0 et npm (ou yarn)
 - Serveur de base de données (MariaDB / MySQL)
 - Symfony CLI (recommandé)
 
