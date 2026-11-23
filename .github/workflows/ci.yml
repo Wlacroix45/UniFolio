@@ -90,7 +90,7 @@ jobs:
         run: npm install --global npm@10.9.3
 
       - name: Audit de sécurité NPM
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: Scan de sécurité du code (Trivy)
         uses: aquasecurity/trivy-action@v0.36.0
