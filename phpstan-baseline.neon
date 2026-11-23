@@ -1,36 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$allDepartements\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$enseignant\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$groupes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$requestStack\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Access to an undefined property App\\Classes\\DataUserSession\:\:\$typesGroupes\.$#'
-			identifier: property.notFound
-			count: 4
-			path: src/Classes/DataUserSession.php
-
-		-
 			message: '#^Constructor of class App\\Classes\\DataUserSession has an unused parameter \$entityManager\.$#'
 			identifier: constructor.unusedParameter
 			count: 1
@@ -39,18 +9,6 @@ parameters:
 		-
 			message: '#^Constructor of class App\\Classes\\DataUserSession has an unused parameter \$eventDispatcher\.$#'
 			identifier: constructor.unusedParameter
-			count: 1
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Variable \$etudiants might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Classes/DataUserSession.php
-
-		-
-			message: '#^Variable \$notifications might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: src/Classes/DataUserSession.php
 
@@ -95,18 +53,6 @@ parameters:
 			identifier: property.notFound
 			count: 2
 			path: src/Components/Trace/TypeTrace/TraceTypeVideo.php
-
-		-
-			message: '#^Call to an undefined static method EasyCorp\\Bundle\\EasyAdminBundle\\Field\\FormField\:\:addPanel\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: src/Controller/Admin/EnseignantCrudController.php
-
-		-
-			message: '#^Call to an undefined static method EasyCorp\\Bundle\\EasyAdminBundle\\Field\\FormField\:\:addPanel\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: src/Controller/Admin/UsersCrudController.php
 
 		-
 			message: '#^Constructor of class App\\Controller\\DashboardEtudiantController has an unused parameter \$departementRepository\.$#'
@@ -349,24 +295,6 @@ parameters:
 			path: src/Entity/Competence.php
 
 		-
-			message: '#^Access to an undefined property App\\Entity\\Departement\:\:\$enseignants\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Entity/Departement.php
-
-		-
-			message: '#^Access to an undefined property App\\Entity\\EnseignantDepartement\:\:\$annee\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Entity/EnseignantDepartement.php
-
-		-
-			message: '#^Access to an undefined property App\\Entity\\EnseignantDepartement\:\:\$roles\.$#'
-			identifier: property.notFound
-			count: 5
-			path: src/Entity/EnseignantDepartement.php
-
-		-
 			message: '#^Access to an undefined property App\\Entity\\Page\:\:\$pageTraces\.$#'
 			identifier: property.notFound
 			count: 1
@@ -385,30 +313,6 @@ parameters:
 			path: src/EventSubscriber/CommentaireSubscriber.php
 
 		-
-			message: '#^Access to an undefined property App\\Repository\\EnseignantDepartementRepository\:\:\$_em\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Repository/EnseignantDepartementRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 4
-			path: src/Repository/EnseignantDepartementRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:DESC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/EnseignantDepartementRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 5
-			path: src/Repository/EtudiantRepository.php
-
-		-
 			message: '#^Deprecated in PHP 8\.4\: Parameter \#2 \$semestre \(App\\Entity\\Semestre\) is implicitly nullable via default value null\.$#'
 			identifier: parameter.implicitlyNullable
 			count: 1
@@ -419,12 +323,6 @@ parameters:
 			identifier: parameter.implicitlyNullable
 			count: 1
 			path: src/Repository/EtudiantRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/GroupeRepository.php
 
 		-
 			message: '#^Class App\\Entity\\PortfolioPage not found\.$#'
@@ -443,12 +341,6 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: src/Repository/PortfolioPageRepository.php
-
-		-
-			message: '#^Access to undefined constant Doctrine\\Common\\Collections\\Criteria\:\:ASC\.$#'
-			identifier: classConstant.notFound
-			count: 1
-			path: src/Repository/SemestreRepository.php
 
 		-
 			message: '#^Class App\\Entity\\TracePage not found\.$#'

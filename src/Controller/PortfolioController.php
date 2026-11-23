@@ -264,7 +264,7 @@ class PortfolioController extends BaseController
         return $this->render('portfolio/_step.html.twig', [
             'step' => $step ?? null,
             'user' => $user ?? null,
-            'portfolio' => $portfolio ?? null,
+            'portfolio' => $portfolio,
             'pages' => $pages ?? null,
             'traces' => $traces ?? null,
             'validations' => $validations ?? null,
