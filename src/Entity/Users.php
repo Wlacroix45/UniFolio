@@ -7,6 +7,7 @@
  */
 namespace App\Entity;
 
+use App\Enum\DepartementRoleEnum;
 use App\Repository\UsersRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -168,5 +169,49 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     public function getIsVerified(): ?bool
     {
         return $this->isVerified;
+    }
+
+    /**
+     * Retourne la liste des départements associés à l'utilisateur (via Enseignant ou Etudiant).
+     *
+     * @return Departement[]
+     */
+    public function getDepartements(): array
+    {
+        if ($this->enseignant !== null) {
+            return $this->enseignant->getDepartements()->toArray();
+        }
+
+        if ($this->etudiant !== null) {
+            $dept = $this->etudiant->getSemestre()?->getAnnee()?->getDiplome()?->getDepartement();
+
+            return $dept ? [$dept] : [];
+        }
+
+        return [];
+    }
+
+    /**
+     * Retourne le rôle spécifique de l'enseignant pour un département donné.
+     */
+    public function getRoleForDepartement(Departement $departement): ?DepartementRoleEnum
+    {
+        return $this->enseignant?->getRoleForDepartement($departement);
+    }
+
+    /**
+     * Vérifie si l'utilisateur possède le rôle spécifié (ou est administrateur) dans le département donné.
+     */
+    public function hasRoleInDepartement(Departement $departement, string|DepartementRoleEnum $role): bool
+    {
+        if (in_array('ROLE_ADMIN', $this->getRoles(), true)) {
+            return true;
+        }
+
+        if ($this->enseignant === null) {
+            return false;
+        }
+
+        return $this->enseignant->hasRoleInDepartement($departement, $role);
     }
 }

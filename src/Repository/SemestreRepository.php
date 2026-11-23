@@ -12,7 +12,6 @@ use App\Entity\Departement;
 use App\Entity\Diplome;
 use App\Entity\Semestre;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,7 +37,7 @@ class SemestreRepository extends ServiceEntityRepository
             ->innerJoin(Diplome::class, 'd', 'WITH', 'd.id = a.diplome')
             ->where('d.departement = :departement')
             ->setParameter('departement', $departement)
-            ->addOrderBy('s.libelle', Criteria::ASC);
+            ->addOrderBy('s.libelle', 'ASC');
     }
 
     public function findByDepartementActif(Departement $departement): array

@@ -7,6 +7,7 @@
  */
 namespace App\Entity;
 
+use App\Enum\DepartementRoleEnum;
 use App\Repository\DepartementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -52,7 +53,6 @@ class Departement
     public function __construct()
     {
         $this->diplomes = new ArrayCollection();
-        $this->enseignants = new ArrayCollection();
         $this->apcReferentiels = new ArrayCollection();
         $this->enseignantDepartements = new ArrayCollection();
     }
@@ -186,6 +186,56 @@ class Departement
             // set the owning side to null (unless already changed)
             if ($enseignantDepartement->getDepartement() === $this) {
                 $enseignantDepartement->setDepartement(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Enseignant>
+     */
+    public function getEnseignants(): Collection
+    {
+        $enseignants = new ArrayCollection();
+        foreach ($this->enseignantDepartements as $ed) {
+            $enseignant = $ed->getEnseignant();
+            if ($enseignant !== null && !$enseignants->contains($enseignant)) {
+                $enseignants->add($enseignant);
+            }
+        }
+
+        return $enseignants;
+    }
+
+    public function addEnseignant(
+        Enseignant $enseignant,
+        DepartementRoleEnum $role = DepartementRoleEnum::EVALUATEUR,
+        bool $defaut = false
+    ): self {
+        foreach ($this->enseignantDepartements as $ed) {
+            if ($ed->getEnseignant() === $enseignant) {
+                $ed->setRole($role);
+                $ed->setDefaut($defaut);
+
+                return $this;
+            }
+        }
+
+        $ed = new EnseignantDepartement($enseignant, $this, $role);
+        $ed->setDefaut($defaut);
+        $this->addEnseignantDepartement($ed);
+        $enseignant->addEnseignantDepartement($ed);
+
+        return $this;
+    }
+
+    public function removeEnseignant(Enseignant $enseignant): self
+    {
+        foreach ($this->enseignantDepartements as $ed) {
+            if ($ed->getEnseignant() === $enseignant) {
+                $this->removeEnseignantDepartement($ed);
+                $enseignant->removeEnseignantDepartement($ed);
             }
         }
 
