@@ -22,7 +22,7 @@ class ApcReferentiel
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true, unique: true)]
+    #[ORM\Column(nullable: true, unique: true)]
     private ?int $intranetId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
