@@ -18,9 +18,12 @@ use Doctrine\ORM\Mapping as ORM;
 class ApcParcours
 {
     #[ORM\Id]
-//    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(nullable: true, unique: true)]
+    private ?int $intranetId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $libelle = null;
@@ -58,16 +61,21 @@ class ApcParcours
         return $this->libelle ?? '';
     }
 
-    public function setId(?int $id): self
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getIntranetId(): ?int
+    {
+        return $this->intranetId;
+    }
+
+    public function setIntranetId(?int $intranetId): self
+    {
+        $this->intranetId = $intranetId;
+
+        return $this;
     }
 
     public function getLibelle(): ?string
