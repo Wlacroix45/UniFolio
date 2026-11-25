@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApcNiveauRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_niveau_competence_ordre', columns: ['competences_id', 'ordre'])]
 class ApcNiveau
 {
     #[ORM\Id]

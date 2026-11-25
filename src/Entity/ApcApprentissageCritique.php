@@ -12,6 +12,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApcApprentissageCritiqueRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_ac_niveau_code', columns: ['niveaux_id', 'code'])]
 class ApcApprentissageCritique
 {
     #[ORM\Id]

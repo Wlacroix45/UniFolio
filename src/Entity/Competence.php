@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompetenceRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_competence_referentiel_code', columns: ['referentiel_id', 'code'])]
 class Competence
 {
     #[ORM\Id]

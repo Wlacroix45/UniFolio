@@ -14,6 +14,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApcParcoursRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_parcours_referentiel_code', columns: ['apc_referentiel_id', 'code'])]
 class ApcParcours
 {
     #[ORM\Id]

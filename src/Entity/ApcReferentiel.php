@@ -14,15 +14,22 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApcReferentielRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_referentiel_code_annee', columns: ['code', 'annee_publication'])]
 class ApcReferentiel
 {
     #[ORM\Id]
-//    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(length: 255, nullable: true, unique: true)]
+    private ?int $intranetId = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $libelle = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $code = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -51,16 +58,21 @@ class ApcReferentiel
         return $this->libelle ?? '';
     }
 
-    public function setId(?int $id): self
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getIntranetId(): ?int
+    {
+        return $this->intranetId;
+    }
+
+    public function setIntranetId(?int $intranetId): self
+    {
+        $this->intranetId = $intranetId;
+
+        return $this;
     }
 
     public function getLibelle(): ?string
@@ -71,6 +83,18 @@ class ApcReferentiel
     public function setLibelle(?string $libelle): self
     {
         $this->libelle = $libelle;
+
+        return $this;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(?string $code): self
+    {
+        $this->code = $code;
 
         return $this;
     }
