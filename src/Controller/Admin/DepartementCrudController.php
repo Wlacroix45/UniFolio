@@ -27,7 +27,7 @@ class DepartementCrudController extends AbstractCrudController
         return [
             IdField::new('id'),
             TextField::new('libelle'),
-            ImageField::new('logo_name', 'Logo')->setBasePath('uploads/departement/logo')->setUploadDir('public/departement/logo'),
+            ImageField::new('logo_name', 'Logo')->setBasePath('uploads/departement/logo')->setUploadDir('public/uploads/departement/logo'),
             TelephoneField::new('tel_contact'),
             ColorField::new('couleur'),
             TextEditorField::new('description'),

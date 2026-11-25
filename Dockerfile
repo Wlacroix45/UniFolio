@@ -70,8 +70,8 @@ COPY --from=build /var/www/html/public/build ./public/build
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
-RUN mkdir -p var/cache var/log \
-	&& chown -R www-data:www-data var
+RUN mkdir -p var/cache var/log public/uploads/departement/logo public/upload/files \
+	&& chown -R www-data:www-data var public/uploads public/upload
 
 EXPOSE 80
 
