@@ -23,7 +23,6 @@ use App\Entity\Groupe;
 use App\Entity\Page;
 use App\Entity\Portfolio;
 use App\Entity\Semestre;
-use App\Entity\Templates;
 use App\Entity\Trace;
 use App\Entity\TypeGroupe;
 use App\Entity\Users;

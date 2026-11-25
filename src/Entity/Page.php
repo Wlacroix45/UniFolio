@@ -30,9 +30,6 @@ class Page
     #[ORM\ManyToMany(targetEntity: Trace::class, inversedBy: 'pages', fetch: "EAGER")]
     private Collection $trace;
 
-    #[ORM\ManyToOne(inversedBy: 'pages')]
-    private ?Templates $templates = null;
-
     #[ORM\ManyToMany(targetEntity: Portfolio::class, inversedBy: 'pages')]
     private Collection $portfolio;
 
@@ -42,8 +39,25 @@ class Page
     #[ORM\OneToOne(mappedBy: 'page', targetEntity: OrdrePage::class, cascade: ['persist', 'remove'])]
     private ?OrdrePage $ordrePage = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    #[ORM\ManyToOne(targetEntity: TemplateSection::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?TemplateSection $templateSection = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $consigne = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $questionReflexivePrompt = null;
+
+    /**
+     * @var Collection<int, ApcNiveau>
+     */
+    #[ORM\ManyToMany(targetEntity: ApcNiveau::class)]
+    #[ORM\JoinTable(name: 'page_apc_niveau')]
+    private Collection $competencesCibles;
 
     public function __construct()
     {
@@ -51,6 +65,7 @@ class Page
         $this->portfolio = new ArrayCollection();
         $this->pageTraces = new ArrayCollection();
         $this->ordreTraces = new ArrayCollection();
+        $this->competencesCibles = new ArrayCollection();
     }
 
     /**
@@ -122,18 +137,6 @@ class Page
         return $this;
     }
 
-    public function getTemplates(): ?Templates
-    {
-        return $this->templates;
-    }
-
-    public function setTemplates(?Templates $templates): self
-    {
-        $this->templates = $templates;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Portfolio>
      */
@@ -193,9 +196,69 @@ class Page
         return $this->description;
     }
 
-    public function setDescription(string $description): static
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getTemplateSection(): ?TemplateSection
+    {
+        return $this->templateSection;
+    }
+
+    public function setTemplateSection(?TemplateSection $templateSection): static
+    {
+        $this->templateSection = $templateSection;
+
+        return $this;
+    }
+
+    public function getConsigne(): ?string
+    {
+        return $this->consigne;
+    }
+
+    public function setConsigne(?string $consigne): static
+    {
+        $this->consigne = $consigne;
+
+        return $this;
+    }
+
+    public function getQuestionReflexivePrompt(): ?string
+    {
+        return $this->questionReflexivePrompt;
+    }
+
+    public function setQuestionReflexivePrompt(?string $questionReflexivePrompt): static
+    {
+        $this->questionReflexivePrompt = $questionReflexivePrompt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApcNiveau>
+     */
+    public function getCompetencesCibles(): Collection
+    {
+        return $this->competencesCibles;
+    }
+
+    public function addCompetenceCible(ApcNiveau $niveau): static
+    {
+        if (!$this->competencesCibles->contains($niveau)) {
+            $this->competencesCibles->add($niveau);
+        }
+
+        return $this;
+    }
+
+    public function removeCompetenceCible(ApcNiveau $niveau): static
+    {
+        $this->competencesCibles->removeElement($niveau);
 
         return $this;
     }

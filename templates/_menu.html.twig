@@ -88,6 +88,15 @@
                             Bilan pédagogique
                         </a>
                     </li>
+                    <li class="nav-item {% if 'modeles-portfolio' in app.request.uri %}active {% else %} inactive{% endif %}">
+                        <a class="nav-link" aria-current="page"
+                           href="{{ path('app_portfolio_template_index') }}">
+                            <i class="fa-duotone fa-layer-group fa-2x"
+                               style="--fa-primary-color: #965da2; --fa-secondary-color: #965da2;"></i>
+                            <br>
+                            Modèles de portfolio
+                        </a>
+                    </li>
                     <li class="nav-item inactive">
                         <a class="nav-link" href="https://portfolio-doc.iut-troyes.univ-reims.fr" target="_blank">
                             <i class="fa-duotone fa-seal-question fa-2x"
