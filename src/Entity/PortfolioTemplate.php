@@ -188,6 +188,16 @@ class PortfolioTemplate
         return $this;
     }
 
+    public function addCompetencesCible(ApcNiveau $niveau): static
+    {
+        return $this->addCompetenceCible($niveau);
+    }
+
+    public function removeCompetencesCible(ApcNiveau $niveau): static
+    {
+        return $this->removeCompetenceCible($niveau);
+    }
+
     public function getStatut(): PortfolioTemplateStatusEnum
     {
         return $this->statut;

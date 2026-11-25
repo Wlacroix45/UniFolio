@@ -141,4 +141,14 @@ class TemplateSection
 
         return $this;
     }
+
+    public function addCompetencesCible(ApcNiveau $niveau): static
+    {
+        return $this->addCompetenceCible($niveau);
+    }
+
+    public function removeCompetencesCible(ApcNiveau $niveau): static
+    {
+        return $this->removeCompetenceCible($niveau);
+    }
 }
