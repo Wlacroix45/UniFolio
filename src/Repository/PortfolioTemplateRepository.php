@@ -2,8 +2,6 @@
 
 namespace App\Repository;
 
-use App\Entity\Annee;
-use App\Entity\ApcParcours;
 use App\Entity\Departement;
 use App\Entity\PortfolioTemplate;
 use App\Enum\PortfolioTemplateStatusEnum;
@@ -59,36 +57,6 @@ class PortfolioTemplateRepository extends ServiceEntityRepository
         if ($statut !== null) {
             $qb->andWhere('pt.statut = :statut')
                 ->setParameter('statut', $statut);
-        }
-
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * @return PortfolioTemplate[]
-     */
-    public function findPublishedForStudent(
-        Departement $departement,
-        ?Annee $annee = null,
-        ?ApcParcours $parcours = null
-    ): array {
-        $qb = $this->createQueryBuilder('pt')
-            ->andWhere('pt.departement = :departement')
-            ->andWhere('pt.statut = :statut')
-            ->setParameter('departement', $departement)
-            ->setParameter('statut', PortfolioTemplateStatusEnum::PUBLIE)
-            ->orderBy('pt.nom', 'ASC');
-
-        if ($annee !== null) {
-            $qb->andWhere('pt.annee IS NULL OR pt.annee = :annee')
-                ->setParameter('annee', $annee);
-        }
-
-        if ($parcours !== null) {
-            $qb->andWhere('pt.apcParcours IS NULL OR pt.apcParcours = :parcours')
-                ->setParameter('parcours', $parcours);
-        } else {
-            $qb->andWhere('pt.apcParcours IS NULL');
         }
 
         return $qb->getQuery()->getResult();
