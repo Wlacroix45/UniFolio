@@ -54,8 +54,8 @@ echo "==> Vidage du cache Symfony..."
 php bin/console cache:clear --no-interaction || true
 
 # set permissions
-mkdir -p var/cache var/log
-chown -R www-data:www-data var
+mkdir -p var/cache var/log public/uploads/departement/logo public/upload/files
+chown -R www-data:www-data var public/uploads public/upload
 
 echo "==> Application UniFolio prête !"
 
