@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompetenceRepository::class)]
-#[ORM\UniqueConstraint(name: 'uniq_competence_referentiel_code', columns: ['referentiel_id', 'code'])]
+#[ORM\UniqueConstraint(name: 'uniq_competence_referentiel_numero', columns: ['referentiel_id', 'numero'])]
 class Competence
 {
     #[ORM\Id]
@@ -33,8 +33,8 @@ class Competence
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $couleur = null;
 
-    #[ORM\Column(length: 20, nullable: true)]
-    private ?string $code = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $numero = null;
 
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $ue = null;
@@ -45,10 +45,24 @@ class Competence
     #[ORM\OneToMany(mappedBy: 'competences', targetEntity: ApcNiveau::class, cascade: ['persist'])]
     private Collection $apcNiveaux;
 
+    /**
+     * @var Collection<int, ApcComposanteEssentielle>
+     */
+    #[ORM\OneToMany(mappedBy: 'competence', targetEntity: ApcComposanteEssentielle::class)]
+    private Collection $composantesEssentielles;
+
+    /**
+     * @var Collection<int, ApcSituationProfessionnelle>
+     */
+    #[ORM\OneToMany(mappedBy: 'competence', targetEntity: ApcSituationProfessionnelle::class)]
+    private Collection $situationsProfessionnelles;
+
     public function __construct()
     {
         $this->validations = new ArrayCollection();
         $this->apcNiveaux = new ArrayCollection();
+        $this->composantesEssentielles = new ArrayCollection();
+        $this->situationsProfessionnelles = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -109,14 +123,14 @@ class Competence
         return $this;
     }
 
-    public function getCode(): ?string
+    public function getNumero(): ?int
     {
-        return $this->code;
+        return $this->numero;
     }
 
-    public function setCode(?string $code): self
+    public function setNumero(?int $numero): self
     {
-        $this->code = $code;
+        $this->numero = $numero;
 
         return $this;
     }
@@ -170,6 +184,60 @@ class Competence
             if ($apcNiveau->getCompetences() === $this) {
                 $apcNiveau->setCompetences(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApcComposanteEssentielle>
+     */
+    public function getComposantesEssentielles(): Collection
+    {
+        return $this->composantesEssentielles;
+    }
+
+    public function addComposanteEssentielle(ApcComposanteEssentielle $composanteEssentielle): self
+    {
+        if (!$this->composantesEssentielles->contains($composanteEssentielle)) {
+            $this->composantesEssentielles->add($composanteEssentielle);
+            $composanteEssentielle->setCompetence($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComposanteEssentielle(ApcComposanteEssentielle $composanteEssentielle): self
+    {
+        if ($this->composantesEssentielles->removeElement($composanteEssentielle) && $composanteEssentielle->getCompetence() === $this) {
+            $composanteEssentielle->setCompetence(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApcSituationProfessionnelle>
+     */
+    public function getSituationsProfessionnelles(): Collection
+    {
+        return $this->situationsProfessionnelles;
+    }
+
+    public function addSituationProfessionnelle(ApcSituationProfessionnelle $situationProfessionnelle): self
+    {
+        if (!$this->situationsProfessionnelles->contains($situationProfessionnelle)) {
+            $this->situationsProfessionnelles->add($situationProfessionnelle);
+            $situationProfessionnelle->setCompetence($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSituationProfessionnelle(ApcSituationProfessionnelle $situationProfessionnelle): self
+    {
+        if ($this->situationsProfessionnelles->removeElement($situationProfessionnelle) && $situationProfessionnelle->getCompetence() === $this) {
+            $situationProfessionnelle->setCompetence(null);
         }
 
         return $this;
