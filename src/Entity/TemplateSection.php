@@ -9,6 +9,10 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Étape ordonnée d'un modèle de portfolio guidé (consignes, question réflexive et compétences ciblées).
+ * Si aucune compétence n'est définie sur la section, le snapshot hérite de celles du modèle parent.
+ */
 #[ORM\Entity(repositoryClass: TemplateSectionRepository::class)]
 class TemplateSection
 {

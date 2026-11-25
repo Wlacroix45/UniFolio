@@ -18,6 +18,9 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Positive;
 
+/**
+ * Formulaire d'une section ordonnée dans un modèle de portfolio guidé.
+ */
 class TemplateSectionType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -79,37 +82,52 @@ class TemplateSectionType extends AbstractType
                 'label' => 'Compétences / niveaux ciblés (optionnel)',
                 'label_attr' => ['class' => 'form-label'],
                 'help' => 'Si vide, les compétences ciblées du modèle seront appliquées par défaut.',
-                'choice_label' => static function (ApcNiveau $niveau): string {
-                    $competence = $niveau->getCompetences();
-                    $competenceLabel = $competence?->getNomCourt() ?? $competence?->getLibelle() ?? '';
-                    $ordre = $niveau->getOrdre();
-
-                    return trim(sprintf(
-                        '%s%s%s',
-                        $competenceLabel !== '' ? $competenceLabel . ' — ' : '',
-                        $niveau->getLibelle() ?? '',
-                        $ordre !== null ? sprintf(' (Niv. %d)', $ordre) : ''
-                    ));
-                },
-                'query_builder' => static function (EntityRepository $er) use ($departement): QueryBuilder {
-                    $qb = $er->createQueryBuilder('n')
-                        ->leftJoin('n.competences', 'c')
-                        ->leftJoin('c.referentiel', 'r')
-                        ->orderBy('c.libelle', 'ASC')
-                        ->addOrderBy('n.ordre', 'ASC');
-
-                    if ($departement !== null) {
-                        $qb->andWhere('r.departement = :departement')
-                            ->setParameter('departement', $departement);
-                    }
-
-                    return $qb;
-                },
+                'choice_label' => self::buildNiveauChoiceLabel(...),
+                'query_builder' => static fn (EntityRepository $er): QueryBuilder =>
+                    self::createNiveauQueryBuilder($er, $departement),
                 'attr' => [
                     'class' => 'form-select',
                     'size' => 4,
                 ],
             ]);
+    }
+
+    /**
+     * Formate l'intitulé d'un niveau APC avec sa compétence parente et son niveau de BUT.
+     */
+    public static function buildNiveauChoiceLabel(ApcNiveau $niveau): string
+    {
+        $competence = $niveau->getCompetences();
+        $competenceLabel = $competence?->getNomCourt() ?? $competence?->getLibelle() ?? '';
+        $ordre = $niveau->getOrdre();
+
+        return trim(sprintf(
+            '%s%s%s',
+            $competenceLabel !== '' ? $competenceLabel . ' — ' : '',
+            $niveau->getLibelle() ?? '',
+            $ordre !== null ? sprintf(' (Niv. %d)', $ordre) : ''
+        ));
+    }
+
+    /**
+     * Construit la requête des niveaux APC restreints au département actif.
+     */
+    public static function createNiveauQueryBuilder(
+        EntityRepository $er,
+        ?Departement $departement
+    ): QueryBuilder {
+        $qb = $er->createQueryBuilder('n')
+            ->leftJoin('n.competences', 'c')
+            ->leftJoin('c.referentiel', 'r')
+            ->orderBy('c.libelle', 'ASC')
+            ->addOrderBy('n.ordre', 'ASC');
+
+        if ($departement !== null) {
+            $qb->andWhere('r.departement = :departement')
+                ->setParameter('departement', $departement);
+        }
+
+        return $qb;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

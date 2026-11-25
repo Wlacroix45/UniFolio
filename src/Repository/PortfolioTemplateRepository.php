@@ -9,6 +9,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * Accès aux modèles de portfolio guidé en base de données.
+ *
  * @extends ServiceEntityRepository<PortfolioTemplate>
  *
  * @method PortfolioTemplate|null find($id, $lockMode = null, $lockVersion = null)
@@ -42,6 +44,9 @@ class PortfolioTemplateRepository extends ServiceEntityRepository
     }
 
     /**
+     * Retourne les modèles d'un département avec préchargement des relations affichées dans la liste
+     * afin d'éviter les requêtes N+1 côté Twig.
+     *
      * @return PortfolioTemplate[]
      */
     public function findByDepartement(
@@ -49,10 +54,16 @@ class PortfolioTemplateRepository extends ServiceEntityRepository
         ?PortfolioTemplateStatusEnum $statut = null
     ): array {
         $qb = $this->createQueryBuilder('pt')
+            ->leftJoin('pt.annee', 'a')->addSelect('a')
+            ->leftJoin('pt.apcParcours', 'p')->addSelect('p')
+            ->leftJoin('pt.apcReferentiel', 'r')->addSelect('r')
+            ->leftJoin('pt.sections', 's')->addSelect('s')
+            ->leftJoin('pt.competencesCibles', 'cc')->addSelect('cc')
             ->andWhere('pt.departement = :departement')
             ->setParameter('departement', $departement)
             ->orderBy('pt.updatedAt', 'DESC')
-            ->addOrderBy('pt.createdAt', 'DESC');
+            ->addOrderBy('pt.createdAt', 'DESC')
+            ->addOrderBy('s.ordre', 'ASC');
 
         if ($statut !== null) {
             $qb->andWhere('pt.statut = :statut')

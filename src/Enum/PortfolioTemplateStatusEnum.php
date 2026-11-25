@@ -2,6 +2,9 @@
 
 namespace App\Enum;
 
+/**
+ * Cycle de vie d'un modèle de portfolio guidé : Brouillon -> Publié -> Archivé.
+ */
 enum PortfolioTemplateStatusEnum: string
 {
     case BROUILLON = 'brouillon';

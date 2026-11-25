@@ -16,9 +16,16 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Éditeur des modèles de portfolio guidé côté enseignant (/enseignant/modeles-portfolio).
+ * Toutes les actions sont cloisonnées par département via DepartementVoter (VIEW / EDIT).
+ */
 #[Route('/enseignant/modeles-portfolio')]
 class PortfolioTemplateController extends BaseController
 {
+    /**
+     * Liste les modèles du département actif, avec filtrage optionnel par statut.
+     */
     #[Route('', name: 'app_portfolio_template_index', methods: ['GET'])]
     public function index(
         Request $request,
@@ -121,6 +128,9 @@ class PortfolioTemplateController extends BaseController
         ]);
     }
 
+    /**
+     * Modifie un modèle non archivé (protégé par DepartementVoter::EDIT).
+     */
     #[Route('/{id}/modifier', name: 'app_portfolio_template_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function edit(
         Request $request,
@@ -173,6 +183,9 @@ class PortfolioTemplateController extends BaseController
         ]);
     }
 
+    /**
+     * Publie un brouillon (requiert jeton CSRF valide et au moins une section).
+     */
     #[Route('/{id}/publier', name: 'app_portfolio_template_publish', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function publish(
         Request $request,
@@ -198,6 +211,9 @@ class PortfolioTemplateController extends BaseController
         return $this->redirectToRoute('app_portfolio_template_show', ['id' => $template->getId()]);
     }
 
+    /**
+     * Archive un modèle sans altérer les snapshots étudiants existants.
+     */
     #[Route('/{id}/archiver', name: 'app_portfolio_template_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function archive(
         Request $request,
@@ -223,6 +239,9 @@ class PortfolioTemplateController extends BaseController
         return $this->redirectToRoute('app_portfolio_template_show', ['id' => $template->getId()]);
     }
 
+    /**
+     * Crée un nouveau brouillon à partir d'un modèle existant (pratique après archivage).
+     */
     #[Route('/{id}/dupliquer', name: 'app_portfolio_template_duplicate', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function duplicate(
         Request $request,

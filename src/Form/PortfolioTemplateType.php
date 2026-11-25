@@ -20,6 +20,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
+/**
+ * Formulaire principal d'édition d'un modèle de portfolio guidé, cloisonné au département actif.
+ */
 class PortfolioTemplateType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -136,32 +139,9 @@ class PortfolioTemplateType extends AbstractType
                 'label' => 'Compétences / niveaux ciblés',
                 'label_attr' => ['class' => 'form-label'],
                 'help' => 'Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs niveaux de compétence.',
-                'choice_label' => static function (ApcNiveau $niveau): string {
-                    $competence = $niveau->getCompetences();
-                    $competenceLabel = $competence?->getNomCourt() ?? $competence?->getLibelle() ?? '';
-                    $ordre = $niveau->getOrdre();
-
-                    return trim(sprintf(
-                        '%s%s%s',
-                        $competenceLabel !== '' ? $competenceLabel . ' — ' : '',
-                        $niveau->getLibelle() ?? '',
-                        $ordre !== null ? sprintf(' (Niv. %d)', $ordre) : ''
-                    ));
-                },
-                'query_builder' => static function (EntityRepository $er) use ($departement): QueryBuilder {
-                    $qb = $er->createQueryBuilder('n')
-                        ->leftJoin('n.competences', 'c')
-                        ->leftJoin('c.referentiel', 'r')
-                        ->orderBy('c.libelle', 'ASC')
-                        ->addOrderBy('n.ordre', 'ASC');
-
-                    if ($departement !== null) {
-                        $qb->andWhere('r.departement = :departement')
-                            ->setParameter('departement', $departement);
-                    }
-
-                    return $qb;
-                },
+                'choice_label' => TemplateSectionType::buildNiveauChoiceLabel(...),
+                'query_builder' => static fn (EntityRepository $er): QueryBuilder =>
+                    TemplateSectionType::createNiveauQueryBuilder($er, $departement),
                 'attr' => [
                     'class' => 'form-select',
                     'size' => 6,

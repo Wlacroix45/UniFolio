@@ -10,6 +10,10 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Modèle (gabarit) de portfolio guidé défini par un éditeur pour un département donné.
+ * Son statut suit le cycle de vie : Brouillon -> Publié -> Archivé.
+ */
 #[ORM\Entity(repositoryClass: PortfolioTemplateRepository::class)]
 class PortfolioTemplate
 {
@@ -240,6 +244,9 @@ class PortfolioTemplate
         return $this->statut !== PortfolioTemplateStatusEnum::ARCHIVE;
     }
 
+    /**
+     * Publie un modèle en brouillon s'il contient au moins une section.
+     */
     public function publish(): static
     {
         if (!$this->canPublish()) {
@@ -256,6 +263,9 @@ class PortfolioTemplate
         return $this;
     }
 
+    /**
+     * Archive le modèle sans impacter les snapshots étudiants déjà créés.
+     */
     public function archive(): static
     {
         if (!$this->canArchive()) {
@@ -289,6 +299,8 @@ class PortfolioTemplate
     }
 
     /**
+     * Retourne les sections triées par ordre croissant (puis par ID en cas d'égalité).
+     *
      * @return list<TemplateSection>
      */
     public function getOrderedSections(): array

@@ -157,6 +157,7 @@
 
             let index = parseInt(container.dataset.index || '0', 10);
 
+            // Recalcule séquentiellement les numéros d'ordre (1..N) et les titres après ajout/suppression/déplacement
             function renumberSections() {
                 const items = container.querySelectorAll('.section-item');
                 items.forEach(function (item, idx) {
@@ -171,6 +172,7 @@
                 });
             }
 
+            // Branche les boutons Monter / Descendre / Supprimer d'une carte section
             function bindSectionEvents(item) {
                 const removeBtn = item.querySelector('.btn-remove-section');
                 const upBtn = item.querySelector('.btn-move-up');
@@ -207,6 +209,7 @@
             container.querySelectorAll('.section-item').forEach(bindSectionEvents);
             renumberSections();
 
+            // Ajoute dynamiquement une section à partir du prototype Symfony CollectionType
             addButton.addEventListener('click', function () {
                 const prototype = container.dataset.prototype;
                 const html = prototype.replace(/__name__/g, String(index));
