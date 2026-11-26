@@ -1,0 +1,443 @@
+$tr-fond: #f8f9fa;
+$tr-entete: #f8fafc;
+$tr-encre: #1e293b;
+$tr-gris: #64748b;
+$tr-filet: #e2e8f0;
+$tr-violet: #6d28d9;
+
+body .tr-suivi {
+  color: $tr-encre;
+  font-size: .85rem;
+
+  *:focus-visible { outline: 2px solid $tr-violet; outline-offset: 1px; }
+
+  .tr-tete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 24px;
+    border-bottom: 1px solid $tr-filet;
+
+    &__titre {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 6px;
+    }
+
+    .ev-titre { color: $tr-encre; }
+  }
+
+  .tr-info {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid $tr-filet;
+    border-radius: 50%;
+    background: $tr-fond;
+    color: $tr-gris;
+    font-size: .7rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: help;
+
+    &:hover + .tr-bulle, &:focus + .tr-bulle { visibility: visible; }
+  }
+
+  .tr-bulle {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 20;
+    visibility: hidden;
+    width: 280px;
+    max-width: 80vw;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: $tr-encre;
+    color: $ev-blanc;
+    font-size: .75rem;
+  }
+
+  .tr-onglets {
+    display: flex;
+    gap: 4px;
+
+    button {
+      padding: 8px 14px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: transparent;
+      color: $tr-gris;
+      font-size: .85rem;
+      font-weight: 600;
+
+      &:hover { color: $tr-violet; }
+      &[aria-pressed='true'] { border-bottom-color: $tr-violet; color: $tr-violet; }
+    }
+  }
+
+  .tr-filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .tr-filtre { flex: 1 1 150px; max-width: 230px; min-width: 0; }
+  .tr-filtre--semestre { flex-basis: 190px; }
+
+  .tr-champ {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid $tr-filet;
+    border-radius: 8px;
+    background: $ev-blanc;
+    color: $tr-encre;
+    font-size: .82rem;
+    text-align: left;
+    white-space: nowrap;
+
+    > span { overflow: hidden; text-overflow: ellipsis; }
+    &:hover, &.show { border-color: $tr-violet; }
+  }
+
+  .tr-compte {
+    margin-left: 4px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: $tr-violet;
+    color: $ev-blanc;
+    font-size: .7rem;
+    font-weight: 700;
+  }
+
+  .tr-menu {
+    width: max-content;
+    min-width: 100%;
+    max-width: min(420px, 85vw);
+    max-height: 280px;
+    margin: 4px 0 0;
+    padding: 4px;
+    overflow-y: auto;
+    border: 1px solid $tr-filet;
+    border-radius: 8px;
+    font-size: .8rem;
+  }
+
+  .tr-option {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+
+    input { flex: none; margin: 0; }
+    small { margin-left: auto; color: $tr-gris; white-space: nowrap; }
+    &:hover { background: $tr-fond; }
+  }
+
+  .tr-parcours {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+
+    > span { flex: 1; margin-right: 16px; color: $tr-gris; white-space: nowrap; }
+  }
+
+  .tr-choix {
+    padding: 3px 10px;
+    border: 1px solid $tr-filet;
+    border-radius: 999px;
+    background: $ev-blanc;
+    color: $tr-encre;
+    font-size: .78rem;
+    font-weight: 600;
+
+    &:hover { border-color: $tr-violet; }
+    &[aria-pressed='true'] { border-color: $tr-violet; background: $tr-violet; color: $ev-blanc; }
+  }
+
+  .tr-menu > .tr-choix { margin: 4px 8px; }
+
+  .tr-lien {
+    height: 36px;
+    padding: 0 8px;
+    border: 0;
+    background: transparent;
+    color: $tr-violet;
+    font-size: .8rem;
+    font-weight: 600;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  .tr-bouton {
+    padding: 7px 14px;
+    border: 1px solid $tr-filet;
+    border-radius: 8px;
+    background: $ev-blanc;
+    color: $tr-violet;
+    font-size: .82rem;
+    font-weight: 600;
+
+    &:hover { border-color: $tr-violet; }
+  }
+
+  .tr-rien {
+    padding: 32px 16px;
+    text-align: center;
+
+    p { margin: 0 0 12px; color: $tr-gris; }
+  }
+
+  .form-check-input {
+    &:checked { background-color: $tr-violet; border-color: $tr-violet; }
+  }
+
+  .tr-barre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 10px;
+  }
+
+  .tr-segments {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid $tr-filet;
+    border-radius: 8px;
+    background: $tr-fond;
+
+    button {
+      padding: 5px 14px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: $tr-gris;
+      font-size: .8rem;
+      font-weight: 600;
+
+      &:hover { color: $tr-violet; }
+
+      &[aria-pressed='true'] {
+        background: $ev-blanc;
+        box-shadow: inset 0 -2px 0 $ev-jaune, 0 0 0 1px $tr-filet;
+        color: $tr-encre;
+      }
+    }
+  }
+
+  .tr-aide { margin: 0; color: $tr-gris; font-size: .75rem; }
+
+  .tr-liste {
+    overflow: hidden;
+    border: 1px solid $tr-filet;
+    border-radius: 8px;
+  }
+
+  .tr-attente { opacity: .5; }
+
+  .tr-colonnes {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.6fr) 120px 16px;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 14px;
+  }
+
+  .tr-entete {
+    border-bottom: 1px solid $tr-filet;
+    background: $tr-entete;
+    color: $tr-gris;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  div + div > .tr-trace { border-top: 1px solid $tr-filet; }
+
+  .tr-ligne {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: $tr-encre;
+    text-align: left;
+    overflow-wrap: anywhere;
+
+    &::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid $tr-gris;
+      border-bottom: 2px solid $tr-gris;
+      transform: rotate(45deg);
+    }
+
+    &:not(.collapsed) {
+      background: $tr-fond;
+      box-shadow: inset 3px 0 0 $tr-violet;
+
+      &::after { transform: rotate(225deg); }
+    }
+
+    &:hover { background: $tr-fond; }
+  }
+
+  .tr-titre strong, .tr-titre .tr-secondaire, .tr-etat strong, .tr-etat .tr-secondaire { display: block; }
+  .tr-titre strong { font-size: .88rem; }
+  .tr-secondaire { color: $tr-gris; font-size: .72rem; }
+  .tr-competences { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .tr-badge {
+    padding: 1px 8px;
+    border: 1px solid $tr-filet;
+    border-radius: 6px;
+    background: $ev-blanc;
+    font-size: .72rem;
+  }
+
+  .tr-etat strong {
+    font-size: .8rem;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 6px;
+      border: 2px solid $tr-gris;
+      border-radius: 50%;
+    }
+  }
+
+  .tr-etat--faite strong::before { border-color: $tr-violet; background: $tr-violet; }
+
+  .tr-detail {
+    padding: 18px 24px 24px;
+    border-top: 1px solid $tr-filet;
+
+    .dashboard-trace-contenu {
+      figure { margin: 0 0 16px; }
+      img { max-width: 100%; border: 1px solid $tr-filet; border-radius: 8px; }
+      iframe { border: 1px solid $tr-filet; border-radius: 8px; }
+      figcaption { font-size: .8rem; color: $tr-gris; }
+      .trace-galerie-lien { display: flex; flex-direction: column; align-items: flex-start; }
+      .trace-galerie-lien a { color: $ev-blanc; overflow-wrap: anywhere; }
+    }
+
+    .dashboard-competences {
+      margin: 0 0 16px;
+      padding: 0;
+      list-style: none;
+
+      li {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 0 4px;
+        border-top: 1px solid $tr-filet;
+      }
+
+      fieldset > div { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+      > p { margin: 0 0 10px; color: $tr-gris; font-size: .75rem; }
+    }
+
+    textarea { margin-bottom: 8px; }
+    form label { margin-right: 12px; }
+  }
+
+  .tr-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+    color: $tr-gris;
+    font-size: .75rem;
+  }
+
+  .btn-primary {
+    margin: 4px 0;
+    border: 1px solid $tr-violet;
+    background: $tr-violet;
+    box-shadow: none;
+
+    &:hover { background: #5b21b6; }
+  }
+
+  .tr-pages {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    padding-top: 10px;
+    font-size: .8rem;
+
+    span { margin: 0 6px; }
+
+    button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid $tr-filet;
+      border-radius: 8px;
+      background: $ev-blanc;
+      color: $tr-encre;
+
+      &:hover:not(:disabled) { border-color: $tr-violet; color: $tr-violet; }
+      &:disabled { opacity: .4; }
+    }
+  }
+}
+
+@media screen and (max-width: 991px) {
+  body .tr-suivi {
+    font-size: 1.5rem;
+
+    div, li, p { font-size: inherit !important; }
+    small, .ev-sur, .tr-secondaire { font-size: .75em !important; }
+
+    button { margin: 0 !important; padding: 10px 16px !important; font-size: 1.2rem !important; }
+    textarea.form-control { margin: 0 0 8px !important; padding: 12px !important; font-size: 1.2rem !important; }
+
+    .tr-menu { font-size: 1.2rem !important; }
+    .tr-entete { display: none; }
+    .tr-filtre { flex-basis: 100%; max-width: none; }
+    .tr-onglets { width: 100%; }
+    .tr-onglets button { flex: 1; padding: 10px 4px !important; }
+    .tr-info { padding: 0 !important; }
+    .tr-champ { height: auto; }
+
+    button.tr-ligne {
+      position: relative;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 6px;
+      padding: 14px 40px 14px 12px !important;
+
+      > span { font-size: 1.1rem; }
+      .tr-titre strong { font-size: 1.25rem; }
+
+      &::after { position: absolute; top: 24px; right: 16px; }
+    }
+
+    .tr-detail { padding: 16px 12px; }
+    .tr-pages { justify-content: center; }
+    .tr-pages button { width: 44px; height: 44px; padding: 0 !important; }
+  }
+}

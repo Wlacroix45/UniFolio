@@ -1,96 +1,61 @@
 <div{{ attributes }}>
-    <div class="accordion accordion-flush" id="accordionFlushExample" style="margin: 25px 0 0 0; position: relative;
-            /*SI toutes les validations de la trace ont pour etat 3*/
-        {% if this.trace.validations|length == this.trace.validations|filter(v => v.etat != 0)|length %}
-            border: solid 2px lightgreen;
-    {% endif %}
-            ">
-        {% if this.trace.validations|length == this.trace.validations|filter(v => v.etat != 0)|length %}
-            <div class="success"
-                 style="
-                            background-color: lightgreen;
-                            color: white;
-                            padding: 10px;
-                            border-radius: 50%;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            margin-bottom: 10px;
-                            box-shadow: rgba(50, 50, 105, 0.15) 0 2px 5px 0, rgba(0, 0, 0, 0.05) 0 1px 1px 0;
-                            border: solid 2px lightgreen;
-                            width: fit-content;
-                            position: absolute;
-                               top: -20px;
-                                 right: 20px;
-                                 z-index: 10;
-                            ">
-                <i class="fa-solid fa-check"></i>
-            </div>
+    {% set total = this.trace.validations|length %}
+    {% set faites = this.trace.validations|filter(v => v.etat != 0)|length %}
+    {% set etudiant = this.trace.bibliotheque.etudiant %}
+    {% set groupesTp = {} %}
+    {% for g in etudiant.groupe %}
+        {% if 'TP' in g.typeGroupe.libelle %}
+            {% set nom = g.libelle starts with 'TP' ? g.libelle : 'TP ' ~ g.libelle %}
+            {% set groupesTp = groupesTp|merge({(nom): nom}) %}
         {% endif %}
-        <div class="accordion-item"
-             style="box-shadow: rgba(50, 50, 105, 0.15) 0 2px 5px 0, rgba(0, 0, 0, 0.05) 0 1px 1px 0;">
-            <div class="accordion-header" id="flush-heading{{ this.trace.id }}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+    {% endfor %}
+    {% set competences = {} %}
+    {% for validation in this.trace.validations %}
+        {% set competence = validation.apcNiveau.competences %}
+        {% set competences = competences|merge({(competence.nomCourt): competence.couleur}) %}
+    {% endfor %}
+    <article class="tr-trace">
+            <div id="flush-heading{{ this.trace.id }}">
+                <button class="tr-colonnes tr-ligne collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#flush-collapse{{ this.trace.id }}" aria-expanded="false"
                         aria-controls="flush-collapse{{ this.trace.id }}">
-
-                    <div class="col-11">
-                        <h5>{{ this.trace.titre }}</h5>
-                        <ul class="card-infos-min">
-                            <li><span>{{ this.trace.bibliotheque.etudiant.prenom }} {{ this.trace.bibliotheque.etudiant.nom }} |
-                            {% for g in this.trace.bibliotheque.etudiant.groupe %}
-                                {% if 'TP' in g.typeGroupe.libelle %}
-                                    TP {{ g.libelle }}
-                                    |
-                                    {{ this.trace.bibliotheque.etudiant.semestre.libelle }}
-                                {% endif %}
-                            {% endfor %}
-                            </span>
-                            </li>
-                            <li>•</li>
-                            <li>
-                                Créé le : {{ this.trace.datecreation|date('d-m-Y H:i') }}</li>
-                            <li>•</li>
-                            <li>
-                                Dernière modification le
-                                : {{ this.trace.datemodification is empty ? '-' : this.trace.datemodification|date('d-m-Y H:i') }}
-                            </li>
-                        </ul>
-                        <ul class="card-infos-min">
-                            <li><span>Conception IA :&nbsp;</span> {{ this.trace.conceptionIa ? this.trace.conceptionIa.libelle : '-' }}</li>
-                            <li>•</li>
-                            <li><span>Réalisation IA :&nbsp;</span> {{ this.trace.realisationIa ? this.trace.realisationIa.libelle : '-' }}</li>
-                        </ul>
-                        <hr>
-
-                        <ul class="dashboard-competences">
-                            {% for validation in this.trace.validations %}
-                                <li>
-                                    <div>
-                                                   <span class="{{ validation.apcNiveau.competences.couleur }}">
-                                                    {{ validation.apcNiveau.competences.nomCourt }}
-                                                       </span> •
-                                        {{ validation.apcNiveau.libelle }}
-                                    </div>
-                                    {% if validation.etat == 0 %} <i class="fa-solid fa-hourglass-half"
-                                                                     style="color: #4c008b"></i>
-                                    {% elseif validation.etat == 1 %} <i class="fa-solid fa-xmark"
-                                                                         style="color: red"></i>
-                                    {% elseif validation.etat == 2 %} <i class="fa-solid fa-arrow-up"
-                                                                         style="color: orange"></i>
-                                    {% elseif validation.etat == 3 %} <i class="fa-solid fa-check"
-                                                                         style="color: limegreen"></i>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
+                    <span class="tr-titre">
+                        <strong>{{ this.trace.titre }}</strong>
+                        <span class="tr-secondaire">
+                            {% if this.trace.datemodification is empty %}
+                                Créée le {{ this.trace.datecreation|date('d.m.Y') }}
+                            {% else %}
+                                Modifiée le {{ this.trace.datemodification|date('d.m.Y') }}
+                            {% endif %}
+                        </span>
+                    </span>
+                    <span>{{ etudiant.prenom }} {{ etudiant.nom }}</span>
+                    <span>
+                        {{ etudiant.semestre.libelle }}
+                        {% for nom in groupesTp %} · {{ nom }}{% endfor %}
+                    </span>
+                    <span class="tr-competences">
+                        {% for nom, couleur in competences %}
+                            <span class="tr-badge {{ couleur }}">{{ nom }}</span>
+                        {% else %}
+                            <span>—</span>
+                        {% endfor %}
+                    </span>
+                    <span class="tr-etat{{ faites == total ? ' tr-etat--faite' }}">
+                        <strong>{{ faites == total ? 'Évaluée' : 'Non évaluée' }}</strong>
+                        <span class="tr-secondaire ev-num">{{ faites }}/{{ total }} compétence{{ total > 1 ? 's' }}</span>
+                    </span>
                 </button>
             </div>
-            <div id="flush-collapse{{ this.trace.id }}" class="accordion-collapse collapse"
-                 aria-labelledby="flush-heading{{ this.trace.id }}" data-bs-parent="#accordionFlushExample">
-                <div class="accordion-body" style="padding: 50px">
+            <div id="flush-collapse{{ this.trace.id }}" class="collapse"
+                 aria-labelledby="flush-heading{{ this.trace.id }}">
+                <div class="tr-detail">
+                    <ul class="tr-meta">
+                        <li>Créée le {{ this.trace.datecreation|date('d-m-Y H:i') }}</li>
+                        <li>Dernière modification : {{ this.trace.datemodification is empty ? '-' : this.trace.datemodification|date('d-m-Y H:i') }}</li>
+                        <li>Conception IA : {{ this.trace.conceptionIa ? this.trace.conceptionIa.libelle : '-' }}</li>
+                        <li>Réalisation IA : {{ this.trace.realisationIa ? this.trace.realisationIa.libelle : '-' }}</li>
+                    </ul>
                     <div class="dashboard-trace-contenu">
                         {% if 'TraceTypeImage' in this.trace.typeTrace %}
                             <figure>
@@ -162,12 +127,12 @@
                                                        </span> •
                                     {{ validation.apcNiveau.libelle }}
                                 </div>
-                                <fieldset{% if not canEvaluate %} disabled{% endif %}>
+                                <fieldset id="grille{{ validation.id }}-{{ validation.etat }}"{% if not canEvaluate %} disabled{% endif %}>
                                     <div>
                                         <div class="form-check">
                                             {% if validation.etat == 0 %}
                                                 <input class="form-check-input" type="checkbox" value=""
-                                                       id="flexCheckChecked" checked>
+                                                       id="validation{{ validation.id }}0-actif" checked>
                                             {% else %}
                                                 <input type="checkbox" id="validation{{ validation.id }}0"
                                                        name="validation0{{ validation.id }}"
@@ -178,13 +143,13 @@
                                                        class="form-check-input">
                                             {% endif %}
 
-                                            <label for="validation1{{ validation.id }}1"
+                                            <label for="validation{{ validation.id }}0{{ validation.etat == 0 ? '-actif' }}"
                                                    class="form-check-label">Non-évaluée</label><br>
                                         </div>
                                         <div class="form-check">
                                             {% if validation.etat == 1 %}
                                                 <input class="form-check-input" type="checkbox" value=""
-                                                       id="flexCheckChecked" checked>
+                                                       id="validation{{ validation.id }}1-actif" checked>
                                             {% else %}
                                                 <input type="checkbox" id="validation{{ validation.id }}1"
                                                        name="validation1{{ validation.id }}"
@@ -195,13 +160,13 @@
                                                        class="form-check-input">
                                             {% endif %}
 
-                                            <label for="validation1{{ validation.id }}1"
+                                            <label for="validation{{ validation.id }}1{{ validation.etat == 1 ? '-actif' }}"
                                                    class="form-check-label">Non-acquis</label><br>
                                         </div>
                                         <div class="form-check">
                                             {% if validation.etat == 2 %}
                                                 <input class="form-check-input" type="checkbox" value=""
-                                                       id="flexCheckChecked" checked>
+                                                       id="validation{{ validation.id }}2-actif" checked>
                                             {% else %}
                                                 <input type="checkbox" id="validation{{ validation.id }}2"
                                                        name="validation2{{ validation.id }}"
@@ -211,13 +176,13 @@
                                                        value="{{ validation.id }}-2"
                                                        class="form-check-input">
                                             {% endif %}
-                                            <label for="validation2{{ validation.id }}2"
+                                            <label for="validation{{ validation.id }}2{{ validation.etat == 2 ? '-actif' }}"
                                                    class="form-check-label">En cours</label><br>
                                         </div>
                                         <div class="form-check">
                                             {% if validation.etat == 3 %}
                                                 <input class="form-check-input" type="checkbox" value=""
-                                                       id="flexCheckChecked" checked>
+                                                       id="validation{{ validation.id }}3-actif" checked>
                                             {% else %}
                                                 <input type="checkbox" id="validation{{ validation.id }}3"
                                                        name="validation3{{ validation.id }}"
@@ -227,7 +192,7 @@
                                                        value="{{ validation.id }}-3"
                                                        class="form-check-input">
                                             {% endif %}
-                                            <label for="validation3{{ validation.id }}3"
+                                            <label for="validation{{ validation.id }}3{{ validation.etat == 3 ? '-actif' }}"
                                                    class="form-check-label">Acquis</label><br>
                                         </div>
                                     </div>
@@ -491,7 +456,5 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
-
-    </div>
+    </article>
 </div>

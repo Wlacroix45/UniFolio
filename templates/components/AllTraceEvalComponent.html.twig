@@ -1,256 +1,189 @@
 <div{{ attributes }}>
-    <div class="alert alert-info">
-        Si une trace est marquée d'un badge check, cela signifie que toutes ses compétences ont été évaluées.
-    </div>
-    <div class="col-12">
-        <p class="text-muted">
-            Filtres
-        </p>
-    </div>
-    <div class="row">
-        <div class="filtre-btn col-12">
-            {% for semestre in semestres %}
-                <button class="btn btn-primary"
+    {% set parcours = {} %}
+    {% for semestre in semestres %}
+        {% set sigle = semestre.annee.diplome.sigle|default(semestre.annee.libelle) %}
+        {% set parcours = parcours|merge({(sigle): parcours[sigle]|default([])|merge([semestre])}) %}
+    {% endfor %}
+
+    <header class="tr-tete">
+        <div class="tr-tete__titre">
+            <h1 class="ev-titre">Traces</h1>
+            <button type="button" class="tr-info" aria-describedby="tr-info-bulle">?</button>
+            <span role="tooltip" id="tr-info-bulle" class="tr-bulle">Toutes les traces des étudiants du département, développez une ligne pour évaluer. Une trace est « Évaluée » lorsque toutes ses compétences l'ont été.</span>
+        </div>
+        <div class="tr-onglets" role="group" aria-label="État de l'évaluation">
+            {% for onglet in [{valeur: 2, libelle: 'À évaluer'}, {valeur: 1, libelle: 'Évaluées'}, {valeur: 0, libelle: 'Toutes'}] %}
+                <button type="button"
+                        aria-pressed="{{ this.selectedEtat == onglet.valeur ? 'true' : 'false' }}"
                         data-action="live#action"
-                        data-live-action-param="changeSemestre"
-                        data-live-id-param="{{ semestre.id }}"
-                        {{ this.selectedSemestreId == semestre.id ? 'disabled' : '' }}
-                >{{ semestre.libelle }}</button>
+                        data-live-action-param="changeEtat"
+                        data-live-id-param="{{ onglet.valeur }}"
+                >{{ onglet.libelle }}</button>
             {% endfor %}
         </div>
-    </div>
+    </header>
 
-    <div class="row">
-        {# Filtre compétences #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionCompetences">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="flush-headingOne">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseOne" aria-expanded="false"
-                            aria-controls="flush-collapseOne">
-                        Filtrer par compétences
-                    </button>
-                </h2>
-                <div id="flush-collapseOne" class="accordion-collapse collapse"
-                     aria-labelledby="flush-headingOne"
-                     data-bs-parent="#accordionCompetences">
-                    <div class="accordion-body row">
-                        <div>
-                            <fieldset style="max-height: 200px; overflow-y: scroll;">
-                                {% for cpt in niveaux %}
-                                    <div style="display: flex" class="form-check">
-                                        <input type="checkbox" id="{{ cpt.id }}"
-                                               name="{{ cpt.id }}"
-                                               data-model="selectedCompetences[]"
-                                               data-action="live#action"
-                                               data-live-action-param="changeCompetences"
-                                               value="{{ cpt.id }}"
-                                               class="form-check-input">
-                                        <label for="{{ cpt.id }}" style="margin-left: 10px"
-                                               class="form-check-label">{{ cpt.libelle }}</label><br>
-                                    </div>
-                                    <hr>
-                                {% endfor %}
-                            </fieldset>
-                        </div>
+    <div class="tr-filtres">
+        <div class="tr-filtre tr-filtre--semestre dropdown">
+            {% set courant = semestres|filter(s => s.id == this.selectedSemestreId)|first %}
+            <button type="button" class="tr-champ dropdown-toggle" data-bs-toggle="dropdown"
+                    data-bs-display="static" aria-expanded="false">
+                <span>{{ courant ? courant.annee.diplome.sigle ~ ' · ' ~ courant.libelle : 'Tous les semestres' }}</span>
+            </button>
+            <div class="dropdown-menu tr-menu" aria-label="Parcours et semestre">
+                <button type="button" class="tr-choix" aria-pressed="{{ courant ? 'false' : 'true' }}"
+                        data-action="live#action" data-live-action-param="voirTousLesSemestres">Tous les semestres</button>
+                {% for sigle, liste in parcours %}
+                    <div class="tr-parcours" role="group" aria-label="{{ sigle }}">
+                        <span>{{ sigle }}</span>
+                        {% for semestre in liste %}
+                            <button type="button" class="tr-choix"
+                                    aria-pressed="{{ this.selectedSemestreId == semestre.id ? 'true' : 'false' }}"
+                                    title="{{ semestre.annee.diplome.libelle }}"
+                                    data-action="live#action"
+                                    data-live-action-param="changeSemestre"
+                                    data-live-id-param="{{ semestre.id }}"
+                            >{{ semestre.libelle }}</button>
+                        {% endfor %}
                     </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
-        {# Filtre groupes #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionGroupes">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="flush-headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseTwo" aria-expanded="false"
-                            aria-controls="flush-collapseTwo">
-                        Filtrer par groupes
-                    </button>
-                </h2>
-                <div id="flush-collapseTwo" class="accordion-collapse collapse"
-                     aria-labelledby="flush-headingTwo"
-                     data-bs-parent="#accordionGroupes">
-                    <div class="accordion-body row">
-                        <div>
-                            <fieldset style="max-height: 200px; overflow-y: scroll;">
-                                {% if this.selectedSemestreId == null %}
-                                    {% for grp in this.groupes %}
-                                        {% if grp.typeGroupe.type == 'TP' %}
-                                            <small>
-                                                {% if grp.apcParcours is not null %}
-                                                    {{ grp.apcParcours.libelle }}
-                                                    |
-                                                    {% for semestre in grp.typeGroupe.semestre|filter(semestre => (semestre.annee.diplome.apcParcours == grp.apcParcours)) %}
-                                                        {{ semestre.libelle }}
-                                                    {% endfor %}
-                                                {% else %}
-                                                    S1
-                                                {% endif %}
-                                            </small>
-                                            <div style="display: flex" class="form-check">
-                                                <input type="checkbox" id="{{ grp.id }}"
-                                                       name="{{ grp.id }}"
-                                                       data-model="selectedGroupes[]"
-                                                       data-action="live#action"
-                                                       data-live-action-param="changeGroupes"
-                                                       value="{{ grp.id }}"
-                                                       class="form-check-input">
-                                                <label for="{{ grp.id }}" style="margin-left: 10px"
-                                                       class="form-check-label">
-                                                    {{ grp.libelle }}
-                                                </label><br>
-                                            </div>
-                                            <hr>
-                                        {% endif %}
+        <div class="tr-filtre">
+            <div class="dropdown">
+                <button type="button" class="tr-champ dropdown-toggle" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside" data-bs-display="static" aria-expanded="false">
+                    <span>Compétence{% if this.selectedCompetences %} <span class="tr-compte">{{ this.selectedCompetences|length }}</span>{% endif %}</span>
+                </button>
+                <fieldset class="dropdown-menu tr-menu" aria-label="Compétences">
+                    {% for cpt in niveaux %}
+                        <label class="tr-option" for="tr-cpt-{{ cpt.id }}">
+                            <input type="checkbox" id="tr-cpt-{{ cpt.id }}"
+                                   data-model="selectedCompetences[]"
+                                   data-action="live#action"
+                                   data-live-action-param="changeCompetences"
+                                   value="{{ cpt.id }}"
+                                   class="form-check-input">
+                            <span>{{ cpt.libelle }}</span>
+                        </label>
+                    {% else %}
+                        <p class="ev-vide">Aucune compétence</p>
+                    {% endfor %}
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="tr-filtre">
+            <div class="dropdown">
+                <button type="button" class="tr-champ dropdown-toggle" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside" data-bs-display="static" aria-expanded="false">
+                    <span>Groupe TP{% if this.selectedGroupes %} <span class="tr-compte">{{ this.selectedGroupes|length }}</span>{% endif %}</span>
+                </button>
+                <fieldset class="dropdown-menu tr-menu" aria-label="Groupes TP">
+                    {% for grp in this.groupes|filter(g => g.typeGroupe.type == 'TP') %}
+                        <label class="tr-option" for="tr-grp-{{ grp.id }}">
+                            <input type="checkbox" id="tr-grp-{{ grp.id }}"
+                                   data-model="selectedGroupes[]"
+                                   data-action="live#action"
+                                   data-live-action-param="changeGroupes"
+                                   value="{{ grp.id }}"
+                                   class="form-check-input">
+                            <span>{{ grp.libelle }}</span>
+                            <small>
+                                {% if grp.apcParcours is not null %}
+                                    {{ this.selectedSemestreId == null ? grp.apcParcours.libelle : grp.apcParcours.code }}
+                                    ·
+                                    {% for semestre in grp.typeGroupe.semestre|filter(semestre => semestre.annee.diplome.apcParcours == grp.apcParcours) %}
+                                        {{ semestre.libelle }}
                                     {% endfor %}
                                 {% else %}
-                                    {% for grp in this.groupes %}
-                                        {% if grp.typeGroupe.type == 'TP' %}
-                                            <small>
-                                                {% if grp.apcParcours is not null %}
-                                                    {{ grp.apcParcours.code }}
-                                                    |
-                                                    {% for semestre in grp.typeGroupe.semestre|filter(semestre => (semestre.annee.diplome.apcParcours == grp.apcParcours)) %}
-                                                        {{ semestre.libelle }}
-                                                    {% endfor %}
-                                                {% else %}
-                                                    S1
-                                                {% endif %}
-                                            </small>
-                                            <div style="display: flex" class="form-check">
-                                                <input type="checkbox" id="{{ grp.id }}"
-                                                       name="{{ grp.id }}"
-                                                       data-model="selectedGroupes[]"
-                                                       data-action="live#action"
-                                                       data-live-action-param="changeGroupes"
-                                                       value="{{ grp.id }}"
-                                                       class="form-check-input">
-                                                <label for="{{ grp.id }}" style="margin-left: 10px"
-                                                       class="form-check-label">
-                                                    {{ grp.libelle }}
-                                                </label><br>
-                                            </div>
-                                            <hr>
-                                        {% endif %}
-                                    {% endfor %}
+                                    S1
                                 {% endif %}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
+                            </small>
+                        </label>
+                    {% else %}
+                        <p class="ev-vide">Aucun groupe</p>
+                    {% endfor %}
+                </fieldset>
             </div>
         </div>
 
-        {# Filtre étudiants #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionEtudiants">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="flush-headingThree">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#flush-collapseThree" aria-expanded="false"
-                            aria-controls="flush-collapseThree">
-                        Filtrer par étudiants
-                    </button>
-                </h2>
-                <div id="flush-collapseThree" class="accordion-collapse collapse"
-                     aria-labelledby="flush-headingThree"
-                     data-bs-parent="#accordionEtudiants">
-                    <div class="accordion-body row">
-                        <div>
-                            <fieldset style="max-height: 200px; overflow-y: scroll;">
-                                {% for etudiant in this.etudiants %}
-                                    <small>
-                                        {{ etudiant.semestre.libelle }}
-                                    </small>
-                                    <div style="display: flex" class="form-check">
-                                        <input type="checkbox" id="{{ etudiant.id }}"
-                                               name="{{ etudiant.id }}"
-                                               data-model="selectedEtudiants[]"
-                                               data-action="live#action"
-                                               data-live-action-param="changeEtudiants"
-                                               value="{{ etudiant.id }}"
-                                               class="form-check-input">
-                                        <label for="{{ etudiant.id }}" style="margin-left: 10px"
-                                               class="form-check-label">{{ etudiant.prenom }} {{ etudiant.nom }}</label><br>
-                                    </div>
-                                    <hr>
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
+        <div class="tr-filtre">
+            <div class="dropdown">
+                <button type="button" class="tr-champ dropdown-toggle" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside" data-bs-display="static" aria-expanded="false">
+                    <span>Étudiant{% if this.selectedEtudiants %} <span class="tr-compte">{{ this.selectedEtudiants|length }}</span>{% endif %}</span>
+                </button>
+                <fieldset class="dropdown-menu tr-menu" aria-label="Étudiants">
+                    {% for etudiant in this.etudiants %}
+                        <label class="tr-option" for="tr-etu-{{ etudiant.id }}">
+                            <input type="checkbox" id="tr-etu-{{ etudiant.id }}"
+                                   data-model="selectedEtudiants[]"
+                                   data-action="live#action"
+                                   data-live-action-param="changeEtudiants"
+                                   value="{{ etudiant.id }}"
+                                   class="form-check-input">
+                            <span>{{ etudiant.prenom }} {{ etudiant.nom }}</span>
+                            <small>{{ etudiant.semestre.libelle }}</small>
+                        </label>
+                    {% else %}
+                        <p class="ev-vide">Aucun étudiant</p>
+                    {% endfor %}
+                </fieldset>
             </div>
         </div>
+
+        {% if this.selectedCompetences or this.selectedGroupes or this.selectedEtudiants %}
+            <button type="button" class="tr-lien" data-action="live#action"
+                    data-live-action-param="reinitialiser">Réinitialiser</button>
+        {% endif %}
     </div>
 
-    <hr>
-
-    <div class="row">
-        <div class="filtre-btn col-12">
-            <button class="btn btn-secondary"
-                    data-action="live#action"
-                    data-live-action-param="changeEtat"
-                    data-live-id-param="0"
-                    {{ this.selectedEtat == 0 ? 'disabled' : '' }}
-            >Toutes les traces</button>
-
-            <button class="btn btn-secondary"
-                    data-action="live#action"
-                    data-live-action-param="changeEtat"
-                    data-live-id-param="1"
-                    {{ this.selectedEtat == 1 ? 'disabled' : '' }}
-            >Traces évaluées</button>
-
-            <button class="btn btn-secondary"
-                    data-action="live#action"
-                    data-live-action-param="changeEtat"
-                    data-live-id-param="2"
-                    {{ this.selectedEtat == 2 ? 'disabled' : '' }}
-            >Traces non évaluées</button>
+    <div class="tr-liste" data-loading="addClass(tr-attente)">
+        {% if this.allTraces %}
+        <div class="tr-colonnes tr-entete" aria-hidden="true">
+            <span>Trace</span>
+            <span>Étudiant</span>
+            <span>Semestre · groupe</span>
+            <span>Compétences</span>
+            <span>Évaluation</span>
         </div>
-    </div>
-
-    <div class="row">
+        {% endif %}
         {% for traceId in this.allTraces %}
             {{ component('TraceEvalCardComponent', {'id': traceId, 'key': traceId}) }}
+        {% else %}
+            <div class="tr-rien">
+                <p>Aucune trace ne correspond à ces filtres.</p>
+                {% if this.selectedSemestreId != 0 %}
+                    <button type="button" class="tr-bouton" data-action="live#action"
+                            data-live-action-param="voirTousLesSemestres">Voir tous les semestres</button>
+                {% endif %}
+            </div>
         {% endfor %}
     </div>
 
-    <div class="btn-pages">
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goToFirstPage"
-                {{ this.currentPage == 1 or this.currentPage == 0 ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevrons-left"></i>
-        </button>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goPreviousPage"
-                {{ this.currentPage == 1 or this.currentPage == 0 ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-
-        <small>
-            Page {{ this.currentPage }} / {{ this.getTotalPages }}
-        </small>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goNextPage"
-                {{ this.currentPage == this.getTotalPages ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goToLastPage"
-                {{ this.currentPage == this.getTotalPages ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevrons-right"></i>
-        </button>
-    </div>
+    {% if this.getTotalPages > 1 %}
+        <nav class="tr-pages" aria-label="Pagination des traces">
+            {% set debut = this.currentPage == 1 or this.currentPage == 0 %}
+            {% set fin = this.currentPage == this.getTotalPages %}
+            <button type="button" aria-label="Première page" {{ debut ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="goToFirstPage">
+                <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" aria-label="Page précédente" {{ debut ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="goPreviousPage">
+                <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
+            </button>
+            <span class="ev-num">Page {{ this.currentPage }} / {{ this.getTotalPages }}</span>
+            <button type="button" aria-label="Page suivante" {{ fin ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="goNextPage">
+                <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
+            </button>
+            <button type="button" aria-label="Dernière page" {{ fin ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="goToLastPage">
+                <i class="fa-solid fa-angles-right" aria-hidden="true"></i>
+            </button>
+        </nav>
+    {% endif %}
 </div>

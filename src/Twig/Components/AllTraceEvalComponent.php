@@ -219,7 +219,7 @@ final class AllTraceEvalComponent extends BaseController
             $this->selectedSemestreId = $this->getFirstSemestreId();
         }
 
-        if ($this->selectedSemestreId === null) {
+        if ($this->selectedSemestreId === null || $this->selectedSemestreId === 0) {
             $this->selectedSemestre = null;
             return;
         }
@@ -472,6 +472,51 @@ final class AllTraceEvalComponent extends BaseController
         $this->getDisplayedTraces();
     }
 
+    private function getIdsSemestres(): array
+    {
+        return array_map(static fn (Semestre $semestre) => (int) $semestre->getId(), $this->semestres);
+    }
+
+    #[LiveAction]
+    public function voirTousLesSemestres()
+    {
+        $this->currentPage = 1;
+        $this->resetTracesCache();
+        $this->selectedSemestreId = 0;
+        $this->selectedSemestre = null;
+        $this->reinitialiser();
+    }
+
+    #[LiveAction]
+    public function reinitialiser()
+    {
+        $this->selectedCompetences = [];
+        $this->selectedGroupes = [];
+        $this->selectedEtudiants = [];
+
+        if ($this->selectedSemestreId !== 0) {
+            $this->changeSemestre($this->selectedSemestreId ?? 0);
+            return;
+        }
+
+        $this->currentPage = 1;
+        $this->resetTracesCache();
+        $this->groupes = [];
+        $this->etudiants = [];
+        $niveaux = [];
+        foreach ($this->semestres as $semestre) {
+            $this->appendUniqueEntities($this->groupes, $this->groupeRepository->findBySemestre($semestre));
+            $this->appendUniqueEntities($this->etudiants, $this->etudiantRepository->findBySemestre($semestre));
+            foreach ($this->getCompetencesForCurrentDepartement() as $competence) {
+                $annee = $semestre->getAnnee()->getOrdre();
+                $this->appendUniqueEntities($niveaux, $this->apcNiveauRepository->findByAnnee($competence, $annee));
+            }
+        }
+        $this->niveaux = $niveaux;
+
+        $this->getDisplayedTraces();
+    }
+
     #[LiveAction]
     public function changeSemestre(#[LiveArg] int $id = 0)
     {
@@ -594,7 +639,7 @@ final class AllTraceEvalComponent extends BaseController
 
         $dept = $this->dataUserSession->getDepartement();
 
-        if ($dept === null) {
+        if ($dept === null || $this->semestres === []) {
             $this->currentPage = 0;
             $this->allTraceIdsCacheKey = $cacheKey;
             $this->allTraceIdsCache = [];
@@ -612,7 +657,8 @@ final class AllTraceEvalComponent extends BaseController
             $this->selectedEtat,
             $this->itemsPerPage,
             $offset,
-            $anneeId
+            $anneeId,
+            $this->selectedSemestre === null ? $this->getIdsSemestres() : []
         );
 
         if ($traceIds == null) {
@@ -634,7 +680,7 @@ final class AllTraceEvalComponent extends BaseController
         }
 
         $dept = $this->dataUserSession->getDepartement();
-        if ($dept === null) {
+        if ($dept === null || $this->semestres === []) {
             $this->totalTracesCacheKey = $cacheKey;
             $this->totalTracesCache = 0;
             return 0;
@@ -648,7 +694,8 @@ final class AllTraceEvalComponent extends BaseController
             $this->selectedGroupes,
             $this->selectedEtudiants,
             $this->selectedEtat,
-            $anneeId
+            $anneeId,
+            $this->selectedSemestre === null ? $this->getIdsSemestres() : []
         );
         $this->totalTracesCacheKey = $cacheKey;
 
