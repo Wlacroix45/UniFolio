@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\DataFixtures;
 
 use App\Entity\ApcReferentiel;
@@ -36,7 +31,7 @@ class ApcReferentielFixture extends Fixture implements OrderedFixtureInterface
         $departement2 = $this->departementRepository->findOneBy(['libelle' => 'CJ']);
 
         $apcReferentiel1 = new ApcReferentiel();
-        $apcReferentiel1->setId(1)
+        $apcReferentiel1->setIntranetId(1)
             ->setLibelle('Référentiel de compétences du B.U.T. MMI')
             ->setDescription('Référentiel de compétences du B.U.T. MMI Version 2022')
             ->setAnneePublication(2022)
@@ -45,7 +40,7 @@ class ApcReferentielFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($apcReferentiel1);
 
         $apcReferentiel2 = new ApcReferentiel();
-        $apcReferentiel2->setId(2)
+        $apcReferentiel2->setIntranetId(2)
             ->setLibelle('Référentiel de compétences du B.U.T. CJ')
             ->setDescription('Référentiel de compétences du B.U.T. CJ Version 2022')
             ->setAnneePublication(2022)

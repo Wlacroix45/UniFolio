@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\DataFixtures;
 
 use App\Entity\ApcParcours;
@@ -39,7 +34,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $referentiel2 = $this->apcReferentielRepository->findOneBy(['libelle' => 'Référentiel de compétences du B.U.T. CJ']);
 
         $parcours1 = new ApcParcours();
-        $parcours1->setId(1)
+        $parcours1->setIntranetId(1)
             ->setLibelle('Stratégie de communication numérique et design d’expérience')
             ->setCode('Strat-UX')
             ->setActif(true)
@@ -47,7 +42,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours1);
 
         $parcours2 = new ApcParcours();
-        $parcours2->setId(2)
+        $parcours2->setIntranetId(2)
             ->setLibelle('Stratégie de communication numérique et design d’expérience')
             ->setCode('Strat-UXFC')
             ->setActif(true)
@@ -55,7 +50,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours2);
 
         $parcours3 = new ApcParcours();
-        $parcours3->setId(3)
+        $parcours3->setIntranetId(3)
             ->setLibelle('Création Numérique')
             ->setCode('Crea')
             ->setActif(true)
@@ -63,7 +58,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours3);
 
         $parcours4 = new ApcParcours();
-        $parcours4->setId(4)
+        $parcours4->setIntranetId(4)
             ->setLibelle('Développement web et dispositifs interactifs')
             ->setCode('DWeb-DI')
             ->setActif(true)
@@ -71,7 +66,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours4);
 
         $parcours5 = new ApcParcours();
-        $parcours5->setId(5)
+        $parcours5->setIntranetId(5)
             ->setLibelle('Développement web et dispositifs interactifs')
             ->setCode('DWeb-DI-FC')
             ->setActif(true)
@@ -79,7 +74,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours5);
 
         $parcours6 = new ApcParcours();
-        $parcours6->setId(6)
+        $parcours6->setIntranetId(6)
             ->setLibelle('Administration et Justice')
             ->setCode('AJ')
             ->setActif(true)
@@ -87,7 +82,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours6);
 
         $parcours7 = new ApcParcours();
-        $parcours7->setId(7)
+        $parcours7->setIntranetId(7)
             ->setLibelle('Patrimoine et Finance')
             ->setCode('PF')
             ->setActif(false)
@@ -95,7 +90,7 @@ class ApcParcoursFixture extends Fixture implements OrderedFixtureInterface
         $manager->persist($parcours7);
 
         $parcours8 = new ApcParcours();
-        $parcours8->setId(8)
+        $parcours8->setIntranetId(8)
             ->setLibelle('Entreprise et Association')
             ->setCode('EA')
             ->setActif(true)
