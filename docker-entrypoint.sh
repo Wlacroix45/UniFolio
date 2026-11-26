@@ -34,6 +34,25 @@ fi
 #init bd
 echo "==> Initialisation de la base de données Symfony..."
 php bin/console doctrine:database:create --if-not-exists --no-interaction || true
+# drop ancienne fk templates
+if [ -n "$DATABASE_URL" ]; then
+    php -r '
+        $url = getenv("DATABASE_URL");
+        if (!$url) exit(0);
+        $p = parse_url($url);
+        $db = ltrim($p["path"] ?? "", "/");
+        if (!$db) exit(0);
+        try {
+            $pdo = new PDO("mysql:host=" . ($p["host"] ?? "localhost") . ";port=" . ($p["port"] ?? 3306) . ";dbname=$db", $p["user"] ?? "root", $p["pass"] ?? "");
+            $stmt = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = " . $pdo->quote($db) . " AND TABLE_NAME = '\''page'\'' AND COLUMN_NAME = '\''templates_id'\'' AND REFERENCED_TABLE_NAME IS NOT NULL");
+            foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $fk) {
+                $pdo->exec("ALTER TABLE page DROP FOREIGN KEY `" . str_replace("`", "", $fk) . "`");
+            }
+        } catch (Exception $e) {
+            exit(0);
+        }
+    ' || true
+fi
 php bin/console doctrine:schema:update --force --no-interaction || true
 php bin/console doctrine:fixtures:load -n || true
 
