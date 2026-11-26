@@ -1,12 +1,8 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\Entity;
 
+use App\Entity\Traits\OrebutSyncTrait;
 use App\Repository\ApcReferentielRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -17,6 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_referentiel_code_annee', columns: ['code', 'annee_publication'])]
 class ApcReferentiel
 {
+    use OrebutSyncTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -36,6 +34,9 @@ class ApcReferentiel
 
     #[ORM\Column(nullable: true)]
     private ?int $annee_publication = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateVersionOrebut = null;
 
     #[ORM\ManyToOne(inversedBy: 'apcReferentiels')]
     #[ORM\JoinColumn(nullable: true)]
@@ -119,6 +120,18 @@ class ApcReferentiel
     public function setAnneePublication(?int $annee_publication): self
     {
         $this->annee_publication = $annee_publication;
+
+        return $this;
+    }
+
+    public function getDateVersionOrebut(): ?\DateTimeImmutable
+    {
+        return $this->dateVersionOrebut;
+    }
+
+    public function setDateVersionOrebut(?\DateTimeImmutable $dateVersionOrebut): self
+    {
+        $this->dateVersionOrebut = $dateVersionOrebut;
 
         return $this;
     }

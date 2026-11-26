@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\Entity;
 
 use App\Enum\DepartementRoleEnum;
@@ -25,6 +20,9 @@ class Departement
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $libelle = null;
 
+    #[ORM\Column(length: 20, nullable: true, unique: true)]
+    private ?string $sigle = null;
+
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $logo_name = null;
 
@@ -41,9 +39,6 @@ class Departement
     #[ORM\OrderBy(value: ['libelle' => 'ASC'])]
     private Collection $diplomes;
 
-    /**
-     * @var Collection<int, EnseignantDepartement>
-     */
     #[ORM\OneToMany(mappedBy: 'departement', targetEntity: EnseignantDepartement::class, cascade: ['persist', 'remove'])]
     private Collection $enseignantDepartements;
 
@@ -82,6 +77,18 @@ class Departement
     public function setLibelle(?string $libelle): self
     {
         $this->libelle = $libelle;
+
+        return $this;
+    }
+
+    public function getSigle(): ?string
+    {
+        return $this->sigle;
+    }
+
+    public function setSigle(?string $sigle): self
+    {
+        $this->sigle = $sigle;
 
         return $this;
     }

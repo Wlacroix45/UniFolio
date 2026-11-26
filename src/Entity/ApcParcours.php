@@ -1,12 +1,8 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\Entity;
 
+use App\Entity\Traits\OrebutSyncTrait;
 use App\Repository\ApcParcoursRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -17,6 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_parcours_referentiel_code', columns: ['apc_referentiel_id', 'code'])]
 class ApcParcours
 {
+    use OrebutSyncTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

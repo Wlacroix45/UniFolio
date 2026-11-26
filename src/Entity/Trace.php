@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\Entity;
 
 use AllowDynamicProperties;
@@ -76,6 +71,14 @@ class Trace
     #[ORM\Column(type: Types::SMALLINT, enumType: RealisationIaEnum::class)]
     private RealisationIaEnum $realisation_ia = RealisationIaEnum::NON_RENSEIGNE;
 
+    #[ORM\ManyToMany(targetEntity: ApcApprentissageCritique::class)]
+    #[ORM\JoinTable(name: 'trace_apprentissage_critique')]
+    private Collection $apprentissagesCritiques;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?ApcSae $sae = null;
+
     /**
      * @return OrdreTrace|null
      */
@@ -99,6 +102,7 @@ class Trace
         $this->validations = new ArrayCollection();
         $this->pages = new ArrayCollection();
         $this->commentaires = new ArrayCollection();
+        $this->apprentissagesCritiques = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -349,5 +353,41 @@ class Trace
     public function setRealisationIa(RealisationIaEnum $realisation_ia): void
     {
         $this->realisation_ia = $realisation_ia;
+    }
+
+    /**
+     * @return Collection<int, ApcApprentissageCritique>
+     */
+    public function getApprentissagesCritiques(): Collection
+    {
+        return $this->apprentissagesCritiques;
+    }
+
+    public function addApprentissageCritique(ApcApprentissageCritique $apprentissageCritique): self
+    {
+        if (!$this->apprentissagesCritiques->contains($apprentissageCritique)) {
+            $this->apprentissagesCritiques->add($apprentissageCritique);
+        }
+
+        return $this;
+    }
+
+    public function removeApprentissageCritique(ApcApprentissageCritique $apprentissageCritique): self
+    {
+        $this->apprentissagesCritiques->removeElement($apprentissageCritique);
+
+        return $this;
+    }
+
+    public function getSae(): ?ApcSae
+    {
+        return $this->sae;
+    }
+
+    public function setSae(?ApcSae $sae): self
+    {
+        $this->sae = $sae;
+
+        return $this;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Traits\OrebutSyncTrait;
 use App\Repository\ApcSituationProfessionnelleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -9,6 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ApcSituationProfessionnelleRepository::class)]
 class ApcSituationProfessionnelle
 {
+    use OrebutSyncTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

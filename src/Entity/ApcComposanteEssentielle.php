@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Traits\OrebutSyncTrait;
 use App\Repository\ApcComposanteEssentielleRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -9,6 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_composante_competence_ordre', columns: ['competence_id', 'ordre'])]
 class ApcComposanteEssentielle
 {
+    use OrebutSyncTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

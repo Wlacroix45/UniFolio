@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Traits\OrebutSyncTrait;
 use App\Repository\ApcSaeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,6 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_sae_semestre_code_matiere', columns: ['semestre_id', 'code_matiere'])]
 class ApcSae
 {
+    use OrebutSyncTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -36,9 +39,14 @@ class ApcSae
     #[ORM\JoinTable(name: 'apc_sae_apprentissage_critique')]
     private Collection $apprentissagesCritiques;
 
+    #[ORM\ManyToMany(targetEntity: ApcRessource::class)]
+    #[ORM\JoinTable(name: 'apc_sae_ressource')]
+    private Collection $ressources;
+
     public function __construct()
     {
         $this->apprentissagesCritiques = new ArrayCollection();
+        $this->ressources = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -128,6 +136,30 @@ class ApcSae
     public function removeApprentissageCritique(ApcApprentissageCritique $apprentissageCritique): self
     {
         $this->apprentissagesCritiques->removeElement($apprentissageCritique);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ApcRessource>
+     */
+    public function getRessources(): Collection
+    {
+        return $this->ressources;
+    }
+
+    public function addRessource(ApcRessource $ressource): self
+    {
+        if (!$this->ressources->contains($ressource)) {
+            $this->ressources->add($ressource);
+        }
+
+        return $this;
+    }
+
+    public function removeRessource(ApcRessource $ressource): self
+    {
+        $this->ressources->removeElement($ressource);
 
         return $this;
     }
