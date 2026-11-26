@@ -81,7 +81,7 @@
                     </figure>
                 {% endif %}
 
-                {{ trace.description|raw }}
+                {{ trace.description|default('')|sanitize_html('texte_etudiant') }}
 
                 <ul class="trace-competences">
                     {% for validation in trace.validations %}

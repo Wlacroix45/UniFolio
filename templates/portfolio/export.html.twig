@@ -468,7 +468,7 @@
 
                     {# Description de la trace #}
                     <div class="trace-description">
-                        {{ trace.description|raw }}
+                        {{ trace.description|default('')|sanitize_html('texte_etudiant') }}
                     </div>
 
                 </div>

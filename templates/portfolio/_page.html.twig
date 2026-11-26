@@ -72,7 +72,7 @@
 
                 </div>
 
-                {{ trace.description|raw }}
+                {{ trace.description|default('')|sanitize_html('texte_etudiant') }}
 
                 <ul class="portfolio-competences">
                     {% for validation in trace.validations %}
