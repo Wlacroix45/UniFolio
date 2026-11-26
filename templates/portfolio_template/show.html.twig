@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniFolio - {{ template.nom }}{% endblock %}
+
+{% block body %}
+    <div class="content-container">
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Tableau de bord</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_portfolio_template_index') }}">Modèles de portfolio</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">{{ template.nom }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h1 class="mb-0">{{ template.nom }}</h1>
+                    <span class="badge {{ template.statut.badgeClass }}">{{ template.statut.libelle }}</span>
+                </div>
+                <p class="text-muted mb-0">
+                    Département : <strong>{{ template.departement.libelle }}</strong>
+                    {% if template.enseignant %}
+                        | Auteur : {{ template.enseignant.prenom }} {{ template.enseignant.nom }}
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if canEdit %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% if not template.isArchived %}
+                        <a href="{{ path('app_portfolio_template_edit', {'id': template.id}) }}"
+                           class="btn btn-primary">
+                            <i class="fa-solid fa-pen me-1"></i> Modifier
+                        </a>
+                    {% endif %}
+
+                    {% if template.isDraft %}
+                        <form method="post"
+                              action="{{ path('app_portfolio_template_publish', {'id': template.id}) }}"
+                              class="d-inline">
+                            <input type="hidden" name="_token"
+                                   value="{{ csrf_token('publish_template_' ~ template.id) }}">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa-solid fa-check me-1"></i> Publier
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if not template.isArchived %}
+                        <form method="post"
+                              action="{{ path('app_portfolio_template_archive', {'id': template.id}) }}"
+                              class="d-inline"
+                              onsubmit="return confirm('Archiver ce modèle ? Les portfolios étudiants déjà démarrés ne seront pas affectés.');">
+                            <input type="hidden" name="_token"
+                                   value="{{ csrf_token('archive_template_' ~ template.id) }}">
+                            <button type="submit" class="btn btn-outline-dark">
+                                <i class="fa-solid fa-box-archive me-1"></i> Archiver
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                {% if template.description %}
+                    <p class="mb-3">{{ template.description|nl2br }}</p>
+                {% endif %}
+
+                <div class="row g-3 small">
+                    <div class="col-md-4">
+                        <strong>Référentiel (PN) :</strong><br>
+                        {{ template.apcReferentiel ? template.apcReferentiel.libelle : 'Non spécifié' }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Année de BUT :</strong><br>
+                        {{ template.annee ? (template.annee.libelleLong ?? template.annee.libelle) : 'Toutes les années' }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Parcours :</strong><br>
+                        {{ template.apcParcours ? template.apcParcours.libelle : 'Tous les parcours' }}
+                    </div>
+                </div>
+
+                {% if template.competencesCibles is not empty %}
+                    <hr>
+                    <div>
+                        <strong class="d-block mb-2">Compétences / niveaux ciblés :</strong>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for niveau in template.competencesCibles %}
+                                <span class="badge bg-light text-dark border">
+                                    {{ niveau.competences ? niveau.competences.nomCourt ~ ' - ' : '' }}{{ niveau.libelle }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <h2 class="h4 mb-3">Structure du modèle ({{ template.sections|length }} section(s))</h2>
+
+        {% set orderedSections = template.orderedSections %}
+        {% if orderedSections is empty %}
+            <div class="alert alert-warning">
+                Ce modèle ne contient encore aucune section. Ajoutez au moins une section avant de le publier.
+            </div>
+        {% else %}
+            <div class="d-flex flex-column gap-3">
+                {% for section in orderedSections %}
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <strong>{{ section.ordre }}. {{ section.titre }}</strong>
+                            <span class="badge bg-secondary">Étape {{ loop.index }}</span>
+                        </div>
+                        <div class="card-body">
+                            {% if section.consigne %}
+                                <p class="mb-2">{{ section.consigne|nl2br }}</p>
+                            {% endif %}
+
+                            {% if section.questionReflexivePrompt %}
+                                <div class="alert alert-light border mb-2">
+                                    <strong>Question réflexive :</strong> {{ section.questionReflexivePrompt|nl2br }}
+                                </div>
+                            {% endif %}
+
+                            {% if section.competencesCibles is not empty %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for niveau in section.competencesCibles %}
+                                        <span class="badge bg-light text-dark border">
+                                            {{ niveau.competences ? niveau.competences.nomCourt ~ ' - ' : '' }}{{ niveau.libelle }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

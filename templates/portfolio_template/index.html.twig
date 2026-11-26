@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniFolio - Modèles de portfolio{% endblock %}
+
+{% block body %}
+    <div class="content-container">
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Tableau de bord</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Modèles de portfolio</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h1 class="mb-1">Modèles de portfolio guidé</h1>
+                <p class="text-muted mb-0">
+                    {% if departement %}
+                        Département actif : <strong>{{ departement.libelle }}</strong>
+                    {% endif %}
+                </p>
+            </div>
+            {% if canEdit %}
+                <a href="{{ path('app_portfolio_template_new') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus me-1"></i> Nouveau modèle
+                </a>
+            {% endif %}
+        </div>
+
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link {{ currentStatut is null ? 'active' : '' }}"
+                   href="{{ path('app_portfolio_template_index') }}">
+                    Tous
+                </a>
+            </li>
+            {% for statut in statuts %}
+                <li class="nav-item">
+                    <a class="nav-link {{ currentStatut == statut ? 'active' : '' }}"
+                       href="{{ path('app_portfolio_template_index', {'statut': statut.value}) }}">
+                        {{ statut.libelle }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% if templates is empty %}
+            <div class="alert alert-info">
+                Aucun modèle de portfolio trouvé pour ce département
+                {% if currentStatut %}avec le statut "{{ currentStatut.libelle }}"{% endif %}.
+            </div>
+        {% else %}
+            <div class="row g-4">
+                {% for template in templates %}
+                    <div class="col-lg-6 col-12">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <h3 class="h5 card-title mb-0">
+                                        <a href="{{ path('app_portfolio_template_show', {'id': template.id}) }}"
+                                           class="text-decoration-none">
+                                            {{ template.nom }}
+                                        </a>
+                                    </h3>
+                                    <span class="badge {{ template.statut.badgeClass }}">
+                                        {{ template.statut.libelle }}
+                                    </span>
+                                </div>
+
+                                {% if template.description %}
+                                    <p class="card-text text-muted small mb-3">
+                                        {{ template.description|length > 160 ? template.description|slice(0, 160) ~ '...' : template.description }}
+                                    </p>
+                                {% endif %}
+
+                                <div class="small text-muted mb-3">
+                                    <div>
+                                        <strong>Année :</strong> {{ template.annee ? (template.annee.libelleLong ?? template.annee.libelle) : 'Toutes' }}
+                                        {% if template.apcParcours %}
+                                            | <strong>Parcours :</strong> {{ template.apcParcours.libelle }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <strong>Référentiel :</strong> {{ template.apcReferentiel ? template.apcReferentiel.libelle : 'Non spécifié' }}
+                                    </div>
+                                    <div>
+                                        <strong>Sections :</strong> {{ template.sections|length }}
+                                        | <strong>Compétences ciblées :</strong> {{ template.competencesCibles|length }}
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto d-flex flex-wrap gap-2">
+                                    <a href="{{ path('app_portfolio_template_show', {'id': template.id}) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Consulter
+                                    </a>
+
+                                    {% if canEdit %}
+                                        {% if not template.isArchived %}
+                                            <a href="{{ path('app_portfolio_template_edit', {'id': template.id}) }}"
+                                               class="btn btn-sm btn-outline-secondary">
+                                                Modifier
+                                            </a>
+                                        {% endif %}
+
+                                        {% if template.isDraft %}
+                                            <form method="post"
+                                                  action="{{ path('app_portfolio_template_publish', {'id': template.id}) }}"
+                                                  class="d-inline">
+                                                <input type="hidden" name="_token"
+                                                       value="{{ csrf_token('publish_template_' ~ template.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    Publier
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if not template.isArchived %}
+                                            <form method="post"
+                                                  action="{{ path('app_portfolio_template_archive', {'id': template.id}) }}"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Archiver ce modèle ? Les portfolios étudiants déjà démarrés ne seront pas affectés.');">
+                                                <input type="hidden" name="_token"
+                                                       value="{{ csrf_token('archive_template_' ~ template.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-dark">
+                                                    Archiver
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

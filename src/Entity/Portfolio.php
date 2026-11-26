@@ -60,6 +60,20 @@ class Portfolio
     #[ORM\Column]
     private ?bool $opt_search = null;
 
+    #[ORM\ManyToOne(targetEntity: PortfolioTemplate::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?PortfolioTemplate $portfolioTemplate = null;
+
+    #[ORM\ManyToOne(targetEntity: ApcReferentiel::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?ApcReferentiel $apcReferentiel = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isGuided = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $snapshotTemplateNom = null;
+
     public function __construct()
     {
         $this->date_creation = new \DateTime();
@@ -281,6 +295,54 @@ class Portfolio
     public function setOptSearch(bool $opt_search): static
     {
         $this->opt_search = $opt_search;
+
+        return $this;
+    }
+
+    public function getPortfolioTemplate(): ?PortfolioTemplate
+    {
+        return $this->portfolioTemplate;
+    }
+
+    public function setPortfolioTemplate(?PortfolioTemplate $portfolioTemplate): static
+    {
+        $this->portfolioTemplate = $portfolioTemplate;
+
+        return $this;
+    }
+
+    public function getApcReferentiel(): ?ApcReferentiel
+    {
+        return $this->apcReferentiel;
+    }
+
+    public function setApcReferentiel(?ApcReferentiel $apcReferentiel): static
+    {
+        $this->apcReferentiel = $apcReferentiel;
+
+        return $this;
+    }
+
+    public function isGuided(): bool
+    {
+        return $this->isGuided;
+    }
+
+    public function setIsGuided(bool $isGuided): static
+    {
+        $this->isGuided = $isGuided;
+
+        return $this;
+    }
+
+    public function getSnapshotTemplateNom(): ?string
+    {
+        return $this->snapshotTemplateNom;
+    }
+
+    public function setSnapshotTemplateNom(?string $snapshotTemplateNom): static
+    {
+        $this->snapshotTemplateNom = $snapshotTemplateNom;
 
         return $this;
     }
