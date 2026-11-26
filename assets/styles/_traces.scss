@@ -5,6 +5,11 @@ $tr-gris: #64748b;
 $tr-filet: #e2e8f0;
 $tr-violet: #6d28d9;
 
+body .tr-separateur {
+  margin: 3rem 0 2.5rem;
+  opacity: .12;
+}
+
 body .tr-suivi {
   color: $tr-encre;
   font-size: .85rem;
