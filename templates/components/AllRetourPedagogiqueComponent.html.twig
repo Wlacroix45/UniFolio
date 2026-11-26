@@ -19,7 +19,7 @@
                                     <li><span>Publié le : </span>{{ retourPedagogique.dateCreation|date('d-m-Y') }}</li>
 {#                                    <li>•</li>#}
                                     <li>
-                                        <span>par : </span>{{ retourPedagogique.enseignant.prenom }} {{ retourPedagogique.enseignant.nom }}
+                                        <span>par : </span>{{ retourPedagogique.enseignant ? retourPedagogique.enseignant.prenom ~ ' ' ~ retourPedagogique.enseignant.nom : 'Administrateur' }}
                                     </li>
                                 </ul>
                             </div>
@@ -67,7 +67,7 @@
                                     <li><span>Publié le : </span>{{ retourPedagogique.dateCreation|date('d-m-Y') }}</li>
 {#                                    <li>•</li>#}
                                     <li>
-                                        <span>par : </span>{{ retourPedagogique.enseignant.prenom }} {{ retourPedagogique.enseignant.nom }}
+                                        <span>par : </span>{{ retourPedagogique.enseignant ? retourPedagogique.enseignant.prenom ~ ' ' ~ retourPedagogique.enseignant.nom : 'Administrateur' }}
                                     </li>
                                 </ul>
                             </div>

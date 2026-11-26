@@ -7,9 +7,9 @@
                  style="margin-bottom: 10px; box-shadow: none; border: 1px solid lightgrey">
                 <div class="card-header">
                     <div style="display: flex; justify-content: space-between; align-items: center">
-                        <h6 class="card-subtitle">{{ commentaire.enseignant.prenom }} {{ commentaire.enseignant.nom }}</h6>
+                        <h6 class="card-subtitle">{{ commentaire.enseignant ? commentaire.enseignant.prenom ~ ' ' ~ commentaire.enseignant.nom : 'Administrateur' }}</h6>
                         <a href="{{ path('app_delete_commentaire', {'id': commentaire.id}) }}">
-                            {% if commentaire.enseignant.id == data_user.enseignant.id %}
+                            {% if commentaire.enseignant.id|default(0) == data_user.enseignant.id|default(-1) %}
                                 <a href="{{ path('app_delete_commentaire', {'id': commentaire.id}) }}">
                                     <button class="btn btn-delete"><i
                                                 class="fa-solid fa-square-minus"></i>

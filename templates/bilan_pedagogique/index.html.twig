@@ -126,7 +126,7 @@
                                                              style="margin-bottom: 10px; box-shadow: none; border: 1px solid lightgrey">
                                                             <div class="card-header">
                                                                 <div style="display: flex; justify-content: space-between; align-items: center">
-                                                                    <h6 class="card-subtitle">{{ commentaire.enseignant.prenom }} {{ commentaire.enseignant.nom }}</h6>
+                                                                    <h6 class="card-subtitle">{{ commentaire.enseignant ? commentaire.enseignant.prenom ~ ' ' ~ commentaire.enseignant.nom : 'Administrateur' }}</h6>
                                                                     <small>
                                                                         {{ commentaire.datecreation|date('d-m-Y H:i') }}
                                                                     </small>

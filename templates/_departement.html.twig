@@ -24,6 +24,16 @@
                     <i class="fa-solid fa-shuffle"></i>
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                    {% if not data_user.enseignant %}
+                        {% for departement in data_user.allDepartementsEnseignant %}
+                            <li>
+                                <button type="submit"
+                                        class="dropdown-item{% if departement.id == data_user.departement.id %} active{% endif %}"
+                                        name="departement"
+                                        value="{{ departement.id }}">{{ departement.libelle }}</button>
+                            </li>
+                        {% endfor %}
+                    {% endif %}
                     {% for ed in data_user.enseignantDepartements %}
                         {% if ed.departement %}
                             <li>

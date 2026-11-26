@@ -13,6 +13,7 @@ enum RealisationIaEnum: int
     public function getLibelle(): string
     {
         return match ($this) {
+            self::NON_RENSEIGNE => 'Non renseigné',
             self::AUCUN => 'Aucun usage de l\'IA',
             self::PEU => 'Quelques éléments du projet ont été générés avec l\'IA (<50%)',
             self::MOYEN => 'La plupart des éléments du projet ont été générés avec l\'IA (>50%)',

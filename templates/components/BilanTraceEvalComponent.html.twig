@@ -141,7 +141,7 @@
                     <p>En attente de validation</p>
                 {% else %}
                     <p>Evaluation saisie
-                        par {{ validation.enseignant.prenom }} {{ validation.enseignant.nom }}
+                        par {{ validation.enseignant ? validation.enseignant.prenom ~ ' ' ~ validation.enseignant.nom : 'un administrateur' }}
                         le {{ validation.dateModification|date('d-m-Y') }}</p>
                 {% endif %}
             {% endfor %}
@@ -158,16 +158,16 @@
                              style="margin-bottom: 10px; box-shadow: none; border: 1px solid lightgrey">
                             <div class="card-header">
                                 <div style="display: flex; justify-content: space-between; align-items: center">
-                                    <h6 class="card-subtitle">{{ commentaire.enseignant.prenom }} {{ commentaire.enseignant.nom }}</h6>
+                                    <h6 class="card-subtitle">{{ commentaire.enseignant ? commentaire.enseignant.prenom ~ ' ' ~ commentaire.enseignant.nom : 'Administrateur' }}</h6>
 
-                                    {% if commentaire.enseignant.id == this.dataUserSession.enseignant.id %}
+                                    {% if commentaire.enseignant.id|default(0) == this.dataUserSession.enseignant.id|default(-1) %}
                                         <a>
                                             <button class="btn btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#staticBackdrop{{ commentaire.id }}"><i
                                                         class="fa-solid fa-square-minus"></i>
                                             </button>
                                         </a>
-                                    {% elseif commentaire.enseignant.id != this.dataUserSession.enseignant.id %}
+                                    {% elseif commentaire.enseignant.id|default(0) != this.dataUserSession.enseignant.id|default(-1) %}
                                         <a>
                                             <button data-action="live#action"
                                                     data-live-action-param="handleResponseForm(commentaireId={{ commentaire.id }})"
@@ -198,9 +198,9 @@
                                     <div style="padding: 10px 25px; border-top: solid 1px lightgrey; background-color: #21252908">
                                         <div>
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <h6 class="card-subtitle">{{ response.enseignant.prenom }} {{ response.enseignant.nom }}</h6>
+                                                <h6 class="card-subtitle">{{ response.enseignant ? response.enseignant.prenom ~ ' ' ~ response.enseignant.nom : 'Administrateur' }}</h6>
 
-                                                {% if response.enseignant.id == this.dataUserSession.enseignant.id %}
+                                                {% if response.enseignant.id|default(0) == this.dataUserSession.enseignant.id|default(-1) %}
                                                     <a>
                                                         <button class="btn btn-delete" data-bs-toggle="modal"
                                                                 data-bs-target="#staticBackdrop{{ response.id }}">
@@ -208,7 +208,7 @@
                                                                     class="fa-solid fa-square-minus"></i>
                                                         </button>
                                                     </a>
-                                                {% elseif response.enseignant.id != this.dataUserSession.enseignant.id %}
+                                                {% elseif response.enseignant.id|default(0) != this.dataUserSession.enseignant.id|default(-1) %}
                                                     <a>
                                                         <button data-action="live#action"
                                                                 data-live-action-param="handleResponseForm(commentaireId={{ commentaire.id }})"
