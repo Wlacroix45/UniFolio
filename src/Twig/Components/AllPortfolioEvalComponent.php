@@ -8,506 +8,198 @@
 
 namespace App\Twig\Components;
 
-use App\Classes\DataUserSession;
 use App\Controller\BaseController;
-use App\Entity\ApcNiveau;
-use App\Entity\Departement;
-use App\Entity\Enseignant;
-use App\Entity\Etudiant;
 use App\Entity\Groupe;
-use App\Entity\Semestre;
-use App\Entity\Users;
-use App\Repository\AnneeRepository;
-use App\Repository\ApcNiveauRepository;
-use App\Repository\CommentaireRepository;
-use App\Repository\CompetenceRepository;
-use App\Repository\DepartementRepository;
-use App\Repository\EnseignantDepartementRepository;
-use App\Repository\EtudiantRepository;
+use App\Entity\Portfolio;
+use App\Enum\EvaluationStatutEnum;
 use App\Repository\GroupeRepository;
-use App\Repository\OrdrePageRepository;
-use App\Repository\OrdreTraceRepository;
 use App\Repository\PortfolioRepository;
 use App\Repository\SemestreRepository;
-use App\Repository\TraceRepository;
-use App\Repository\TypeGroupeRepository;
-use App\Repository\ValidationRepository;
-use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Form\FormFactoryInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Contracts\Service\Attribute\Required;
+use App\Security\Voter\DepartementVoter;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 
 #[AsLiveComponent('AllPortfolioEvalComponent')]
-class AllPortfolioEvalComponent extends BaseController
+final class AllPortfolioEvalComponent extends BaseController
 {
     use DefaultActionTrait;
 
-    public array $semestre = [];
-    public array $annee = [];
-    public array $semestres = [];
-    public array $annees = [];
-    public array $dept = [];
-    public int $validation = 0;
+    private const PAR_PAGE = 20;
 
-    public int $itemsPerPage = 4;
+    #[LiveProp(writable: true, url: true)]
+    public string $statut = 'a_evaluer';
 
-    #[LiveProp(writable: true)]
-    public int $currentPage = 1;
+    #[LiveProp(writable: true, onUpdated: 'revenirAuDebut')]
+    public int $semestreId = 0;
 
-    #[LiveProp(writable: true)]
-    /** @var Groupe[] */
-    public array $groupes = [];
+    #[LiveProp(writable: true, onUpdated: 'revenirAuDebut')]
+    public int $groupeId = 0;
 
-    #[LiveProp(writable: true)]
-    /** @var Etudiant[] */
-    public array $etudiants = [];
+    #[LiveProp(writable: true, onUpdated: 'revenirAuDebut')]
+    public int $etudiantId = 0;
+
+    #[LiveProp(writable: true, onUpdated: 'revenirAuDebut')]
+    public int $niveauId = 0;
 
     #[LiveProp(writable: true)]
-    public ?int $selectedSemestreId = null;
+    public int $page = 1;
 
-    private ?Semestre $selectedSemestre = null;
-
-    #[LiveProp(writable: true)]
-    public array $selectedCompetences = [];
-
-    #[LiveProp(writable: true)]
-    public array $selectedGroupes = [];
-
-    #[LiveProp(writable: true)]
-    public array $selectedEtudiants = [];
-
-    #[LiveProp(writable: true)]
-    public ?int $selectedEtat = 2;
-
-    #[LiveProp(writable: true)]
-    /** @var ApcNiveau[] */
-    public array $niveaux = [];
-
-    #[LiveProp(writable: true)]
-    /** @var int[] */
-    public array $allPortfolios = [];
-
-    private RequestStack $requestStack;
-    private ?Departement $defaultDepartement = null;
-    private ?Enseignant $currentEnseignant = null;
-    private array $defaultCompetences = [];
-    private ?array $allPortfolioIdsCache = null;
-    private ?string $allPortfolioIdsCacheKey = null;
-    private ?int $totalPortfoliosCache = null;
-    private ?string $totalPortfoliosCacheKey = null;
+    private ?array $compteurs = null;
 
     public function __construct(
-        protected PortfolioRepository $portfolioRepository,
-        protected DepartementRepository $departementRepository,
-        protected ApcNiveauRepository $apcNiveauRepository,
-        protected EtudiantRepository $etudiantRepository,
-        protected GroupeRepository $groupeRepository,
-        protected SemestreRepository $semestreRepository,
-        protected AnneeRepository $anneeRepository,
-        protected TypeGroupeRepository $typeGroupeRepository,
-        protected ValidationRepository $validationRepository,
-        protected CommentaireRepository $commentaireRepository,
-        protected CompetenceRepository $competenceRepository,
-        protected OrdreTraceRepository $ordreTraceRepository,
-        protected OrdrePageRepository $ordrePageRepository,
-        protected TraceRepository $traceRepository,
-        protected EnseignantDepartementRepository $enseignantDepartementRepository,
-        #[Required] public Security $security,
-        RequestStack $requestStack,
-        private FormFactoryInterface $formFactory,
-        protected DataUserSession $dataUserSession,
+        private readonly PortfolioRepository $portfolioRepository,
+        private readonly SemestreRepository $semestreRepository,
+        private readonly GroupeRepository $groupeRepository,
     ) {
-        $this->requestStack = $requestStack;
-
-        $securityUser = $this->security->getUser();
-        $this->currentEnseignant = $securityUser instanceof Users ? $securityUser->getEnseignant() : null;
-        $activeDepartement = $this->dataUserSession->getDepartement();
-        $dept = $activeDepartement !== null ? [$activeDepartement] : [];
-
-        foreach ($dept as $index => $departement) {
-            if ($index === 0) {
-                $this->defaultDepartement = $departement;
-            }
-
-            $this->annees = $this->anneeRepository->findByDepartement($departement);
-            $this->semestres = $this->semestreRepository->findByDepartementActif($departement);
-
-            foreach ($this->semestres as $semestre) {
-                $groupes = $this->groupeRepository->findBySemestre($semestre);
-                foreach ($groupes as $groupe) {
-                    $this->groupes[] = $groupe;
-                }
-                $this->groupes = array_unique($this->groupes, SORT_REGULAR);
-            }
-
-            foreach ($this->semestres as $semestre) {
-                $etudiants = $this->etudiantRepository->findBySemestre($semestre);
-                foreach ($etudiants as $etudiant) {
-                    $this->etudiants[] = $etudiant;
-                }
-            }
-
-            $this->dept[] = $departement;
-        }
-
-        if ($this->defaultDepartement !== null) {
-            $referentiel = $this->defaultDepartement->getApcReferentiels()->first();
-            if ($referentiel !== false && $referentiel !== null) {
-                $this->defaultCompetences = $this->competenceRepository->findBy(['referentiel' => $referentiel]);
-            }
-        }
-
-        $this->groupes = $this->uniqueEntities($this->groupes);
-        $this->etudiants = $this->uniqueEntities($this->etudiants);
-    }
-
-    private function getFirstSemestreId(): ?int
-    {
-        foreach ($this->semestres as $semestre) {
-            if ($semestre instanceof Semestre && $semestre->getId() !== null) {
-                return (int) $semestre->getId();
-            }
-        }
-
-        return null;
-    }
-
-    private function resolveSelectedSemestre(): void
-    {
-        if ($this->selectedSemestreId === null) {
-            $this->selectedSemestreId = $this->getFirstSemestreId();
-        }
-
-        if ($this->selectedSemestreId === null) {
-            $this->selectedSemestre = null;
-            return;
-        }
-
-        if ($this->selectedSemestre !== null && $this->selectedSemestre->getId() === $this->selectedSemestreId) {
-            return;
-        }
-
-        $this->selectedSemestre = $this->semestreRepository->find($this->selectedSemestreId);
-    }
-
-    private function uniqueEntities(array $entities): array
-    {
-        $unique = [];
-        $seen = [];
-
-        foreach ($entities as $entity) {
-            if (!is_object($entity)) {
-                continue;
-            }
-
-            $id = method_exists($entity, 'getId') ? $entity->getId() : null;
-            $key = $entity::class . '#' . ($id ?? spl_object_hash($entity));
-
-            if (isset($seen[$key])) {
-                continue;
-            }
-
-            $seen[$key] = true;
-            $unique[] = $entity;
-        }
-
-        return $unique;
-    }
-
-    private function appendUniqueEntities(array &$target, array $entities): void
-    {
-        $target = $this->uniqueEntities([...$target, ...$entities]);
-    }
-
-    private function selectedIdsExistInCollection(array $selectedIds, array $entities): bool
-    {
-        $availableIds = [];
-        foreach ($entities as $entity) {
-            if (is_object($entity) && method_exists($entity, 'getId') && $entity->getId() !== null) {
-                $availableIds[] = (int) $entity->getId();
-            }
-        }
-
-        foreach ($selectedIds as $id) {
-            if (!in_array((int) $id, $availableIds, true)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function resetPortfoliosCache(): void
-    {
-        $this->allPortfolioIdsCache = null;
-        $this->allPortfolioIdsCacheKey = null;
-        $this->totalPortfoliosCache = null;
-        $this->totalPortfoliosCacheKey = null;
-    }
-
-    private function getFiltersCacheKey(): string
-    {
-        $state = [
-            'dept' => $this->resolveDepartementForFilters()?->getId(),
-            'semestre' => $this->selectedSemestre?->getId(),
-            'competences' => array_map('intval', $this->selectedCompetences),
-            'groupes' => array_map('intval', $this->selectedGroupes),
-            'etudiants' => array_map('intval', $this->selectedEtudiants),
-            'etat' => $this->selectedEtat,
-        ];
-
-        return md5((string) json_encode($state));
-    }
-
-    private function getCompetencesForCurrentDepartement(): array
-    {
-        return $this->defaultCompetences;
-    }
-
-    private function resolveDepartementForFilters(): ?Departement
-    {
-        return $this->dataUserSession->getDepartement() ?? $this->defaultDepartement;
     }
 
     #[PostMount]
-    public function init(): void
+    #[PostHydrate]
+    public function controlerAcces(): void
     {
-        $this->resolveSelectedSemestre();
-        $this->changeSemestre($this->selectedSemestreId ?? 0);
+        $departement = $this->dataUserSession->getDepartement();
+        if ($departement !== null) {
+            $this->denyAccessUnlessGranted(DepartementVoter::VIEW, $departement);
+        }
+    }
+
+    public function revenirAuDebut(): void
+    {
+        $this->page = 1;
     }
 
     #[LiveAction]
-    public function changeEtat(#[LiveArg] int $id = 0): void
+    public function changerStatut(#[LiveArg] string $statut): void
     {
-        $this->currentPage = 1;
-        $this->allPortfolios = [];
-        $this->resetPortfoliosCache();
-
-        switch ($id) {
-            case 0:
-                $this->selectedEtat = 0;
-                break;
-            case 1:
-                $this->selectedEtat = 1;
-                break;
-            case 2:
-                $this->selectedEtat = 2;
-                break;
-        }
-
-        $this->resolveSelectedSemestre();
-        $this->getDisplayedPortfolios();
+        $this->statut = (EvaluationStatutEnum::tryFrom($statut) ?? EvaluationStatutEnum::A_EVALUER)->value;
+        $this->page = 1;
     }
 
     #[LiveAction]
-    public function changeSemestre(#[LiveArg] int $id = 0): void
+    public function allerPage(#[LiveArg] int $page): void
     {
-        $this->currentPage = 1;
-        $this->resetPortfoliosCache();
-
-        $defaultSemestreId = $this->getFirstSemestreId();
-        $this->selectedSemestreId = $id !== 0 ? $id : $defaultSemestreId;
-        $this->resolveSelectedSemestre();
-
-        $competences = $this->getCompetencesForCurrentDepartement();
-
-        $competencesNiveau = [];
-
-        if ($this->selectedSemestre !== null) {
-            $semestre = $this->selectedSemestre;
-            $this->groupes = $this->groupeRepository->findBySemestre($semestre);
-            $this->etudiants = $this->etudiantRepository->findBySemestre($semestre);
-
-            foreach ($competences as $competence) {
-                $niveaux = $this->apcNiveauRepository->findByAnnee($competence, $semestre->getAnnee()->getOrdre());
-                $this->appendUniqueEntities($competencesNiveau, $niveaux);
-            }
-            $this->niveaux = $competencesNiveau;
-        } else {
-            $this->groupes = [];
-            $this->etudiants = [];
-
-            foreach ($this->semestres as $semestre) {
-                $groupes = $this->groupeRepository->findBySemestre($semestre);
-                $this->appendUniqueEntities($this->groupes, $groupes);
-
-                $etudiants = $this->etudiantRepository->findBySemestre($semestre);
-                $this->appendUniqueEntities($this->etudiants, $etudiants);
-
-                foreach ($competences as $competence) {
-                    $niveaux = $this->apcNiveauRepository->findByAnnee($competence, $semestre->getAnnee()->getOrdre());
-                    $this->appendUniqueEntities($competencesNiveau, $niveaux);
-                }
-                $this->niveaux = $competencesNiveau;
-            }
-        }
-
-        if (!empty($this->selectedEtudiants) && !$this->selectedIdsExistInCollection($this->selectedEtudiants, $this->etudiants)) {
-            $this->selectedEtudiants = [];
-        }
-
-        if (!empty($this->selectedGroupes) && !$this->selectedIdsExistInCollection($this->selectedGroupes, $this->groupes)) {
-            $this->selectedGroupes = [];
-        }
-
-        if (!empty($this->selectedCompetences) && !$this->selectedIdsExistInCollection($this->selectedCompetences, $this->niveaux)) {
-            $this->selectedCompetences = [];
-        }
-
-        $this->getDisplayedPortfolios();
+        $this->page = $page;
     }
 
     #[LiveAction]
-    public function changeCompetences(): void
+    public function reinitialiser(): void
     {
-        $this->currentPage = 1;
-        $this->resetPortfoliosCache();
-        $this->resolveSelectedSemestre();
-        $this->getDisplayedPortfolios();
-
-        if ($this->selectedSemestre !== null) {
-            $this->changeSemestre($this->selectedSemestreId);
-        }
+        $this->semestreId = $this->groupeId = $this->etudiantId = $this->niveauId = 0;
+        $this->page = 1;
     }
 
-    #[LiveAction]
-    public function changeGroupes(): void
+    public function getStatutActif(): EvaluationStatutEnum
     {
-        $this->currentPage = 1;
-        $this->resetPortfoliosCache();
-        $this->resolveSelectedSemestre();
-        $this->getDisplayedPortfolios();
+        return EvaluationStatutEnum::tryFrom($this->statut) ?? EvaluationStatutEnum::A_EVALUER;
     }
 
-    #[LiveAction]
-    public function changeEtudiants(): void
+    public function getStatuts(): array
     {
-        $this->currentPage = 1;
-        $this->resetPortfoliosCache();
-        $this->resolveSelectedSemestre();
-        $this->getDisplayedPortfolios();
+        return EvaluationStatutEnum::cases();
     }
 
-    public function getTotalPages(): int
+    public function getCompteurs(): array
     {
-        $count = $this->getTotalPortfoliosCount();
-        if ($count === 0) {
-            return 0;
+        if ($this->compteurs !== null) {
+            return $this->compteurs;
         }
 
-        return intval(ceil($count / $this->itemsPerPage));
-    }
-
-    public function getDisplayedPortfolios(): void
-    {
-        $this->allPortfolios = $this->getAllPortfolio();
-    }
-
-    #[LiveAction]
-    public function goNextPage(): void
-    {
-        $this->resolveSelectedSemestre();
-        if ($this->currentPage < $this->getTotalPages()) {
-            $this->currentPage++;
-        }
-        $this->getDisplayedPortfolios();
-    }
-
-    #[LiveAction]
-    public function goPreviousPage(): void
-    {
-        $this->resolveSelectedSemestre();
-        if ($this->currentPage > 1) {
-            $this->currentPage--;
-        }
-        $this->getDisplayedPortfolios();
-    }
-
-    #[LiveAction]
-    public function goToFirstPage(): void
-    {
-        $this->resolveSelectedSemestre();
-        $this->currentPage = 1;
-        $this->getDisplayedPortfolios();
-    }
-
-    #[LiveAction]
-    public function goToLastPage(): void
-    {
-        $this->resolveSelectedSemestre();
-        $this->currentPage = $this->getTotalPages();
-        $this->getDisplayedPortfolios();
-    }
-
-    public function getAllPortfolio(): array
-    {
-        $this->resolveSelectedSemestre();
-        $offset = max(0, ($this->currentPage - 1) * $this->itemsPerPage);
-        $cacheKey = $this->getFiltersCacheKey() . ':' . $this->currentPage . ':' . $this->itemsPerPage;
-        if ($this->allPortfolioIdsCacheKey === $cacheKey && $this->allPortfolioIdsCache !== null) {
-            return $this->allPortfolioIdsCache;
+        $departement = $this->dataUserSession->getDepartement();
+        $this->compteurs = [];
+        foreach (EvaluationStatutEnum::cases() as $statut) {
+            $this->compteurs[$statut->value] = $departement === null
+                ? 0
+                : $this->portfolioRepository->countForEvaluation($departement, $statut, $this->getFiltres());
         }
 
-        $dept = $this->resolveDepartementForFilters();
-        if ($dept === null) {
-            $this->currentPage = 0;
-            $this->allPortfolioIdsCacheKey = $cacheKey;
-            $this->allPortfolioIdsCache = [];
-            return $this->allPortfolioIdsCache;
+        return $this->compteurs;
+    }
+
+    public function getNombrePages(): int
+    {
+        return max(1, (int) ceil($this->getCompteurs()[$this->getStatutActif()->value] / self::PAR_PAGE));
+    }
+
+    public function getPageCourante(): int
+    {
+        return min(max(1, $this->page), $this->getNombrePages());
+    }
+
+    public function getLignes(): array
+    {
+        $departement = $this->dataUserSession->getDepartement();
+        if ($departement === null) {
+            return [];
         }
 
-        $portfolioIds = $this->portfolioRepository->findIdsByFilters(
-            $dept,
-            $this->selectedSemestre,
-            $this->selectedGroupes,
-            $this->selectedEtudiants,
-            $this->selectedCompetences,
-            $this->selectedEtat,
-            $this->itemsPerPage,
-            $offset
+        $portfolios = $this->portfolioRepository->findForEvaluation(
+            $departement,
+            $this->getStatutActif(),
+            $this->getFiltres(),
+            self::PAR_PAGE,
+            ($this->getPageCourante() - 1) * self::PAR_PAGE
+        );
+        $progression = $this->portfolioRepository->findProgression(
+            array_map(static fn (Portfolio $p) => (int) $p->getId(), $portfolios)
         );
 
-        if ($portfolioIds == null) {
-            $this->currentPage = 0;
-        }
-
-        $this->allPortfolioIdsCacheKey = $cacheKey;
-        $this->allPortfolioIdsCache = $portfolioIds;
-
-        return $this->allPortfolioIdsCache;
+        return array_map(static fn (Portfolio $p) => [
+            'portfolio' => $p,
+            ...($progression[$p->getId()] ?? ['total' => 0, 'evaluees' => 0]),
+        ], $portfolios);
     }
 
-    private function getTotalPortfoliosCount(): int
+    public function getSemestres(): array
     {
-        $this->resolveSelectedSemestre();
-        $cacheKey = $this->getFiltersCacheKey();
-        if ($this->totalPortfoliosCacheKey === $cacheKey && $this->totalPortfoliosCache !== null) {
-            return $this->totalPortfoliosCache;
+        $departement = $this->dataUserSession->getDepartement();
+
+        return $departement === null ? [] : $this->semestreRepository->findByDepartementActif($departement);
+    }
+
+    public function getGroupes(): array
+    {
+        $departement = $this->dataUserSession->getDepartement();
+        if ($departement === null) {
+            return [];
         }
 
-        $dept = $this->resolveDepartementForFilters();
-        if ($dept === null) {
-            $this->totalPortfoliosCacheKey = $cacheKey;
-            $this->totalPortfoliosCache = 0;
-            return 0;
-        }
+        return array_values(array_filter(
+            $this->groupeRepository->findByDepartementSemestreActif($departement),
+            static fn (Groupe $groupe) => $groupe->getTypeGroupe()?->getType() === 'TP'
+        ));
+    }
 
-        $this->totalPortfoliosCache = $this->portfolioRepository->countByFilters(
-            $dept,
-            $this->selectedSemestre,
-            $this->selectedGroupes,
-            $this->selectedEtudiants,
-            $this->selectedCompetences,
-            $this->selectedEtat
-        );
-        $this->totalPortfoliosCacheKey = $cacheKey;
+    public function getEtudiants(): array
+    {
+        $departement = $this->dataUserSession->getDepartement();
 
-        return $this->totalPortfoliosCache;
+        return $departement === null ? [] : $this->portfolioRepository->findEtudiantsAvecPortfolio($departement);
+    }
+
+    public function getNiveaux(): array
+    {
+        $departement = $this->dataUserSession->getDepartement();
+
+        return $departement === null ? [] : $this->portfolioRepository->findNiveauxRevendiques($departement);
+    }
+
+    public function isFiltre(): bool
+    {
+        return array_filter($this->getFiltres()) !== [];
+    }
+
+    private function getFiltres(): array
+    {
+        return [
+            'semestre' => $this->semestreId,
+            'groupe' => $this->groupeId,
+            'etudiant' => $this->etudiantId,
+            'niveau' => $this->niveauId,
+        ];
     }
 }

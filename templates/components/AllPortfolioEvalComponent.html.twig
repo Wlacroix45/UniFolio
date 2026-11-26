@@ -1,247 +1,120 @@
-<div{{ attributes }}>
-    <div class="alert alert-info">
-        Si un portfolio est marqué d'un badge check, cela signifie que toutes les compétences de l'ensemble des traces qu'il contient ont été évaluées.
-    </div>
+<div{{ attributes.defaults({class: 'ev ev-liste'}) }}>
+    {% set compteurs = this.compteurs %}
+    {% set actif = this.statutActif %}
 
-    <div class="col-12">
-        <p class="text-muted">Filtres</p>
-    </div>
-
-    <div class="row">
-        <div class="filtre-btn col-12">
-            {% for semestre in semestres %}
-                <button class="btn btn-primary"
-                        data-action="live#action"
-                        data-live-action-param="changeSemestre"
-                        data-live-id-param="{{ semestre.id }}"
-                        {{ this.selectedSemestreId == semestre.id ? 'disabled' : '' }}
-                >{{ semestre.libelle }}</button>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="row">
-        {# Filtre compétences #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionCompetences">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-competences">
-                    <button class="accordion-button collapsed" type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse-competences"
-                            aria-expanded="false"
-                            aria-controls="collapse-competences">
-                        Filtrer par compétences
-                    </button>
-                </h2>
-                <div id="collapse-competences" class="accordion-collapse collapse"
-                     aria-labelledby="heading-competences"
-                     data-bs-parent="#accordionCompetences">
-                    <div class="accordion-body row">
-                        <fieldset style="max-height: 200px; overflow-y: scroll;">
-                            {% for cpt in niveaux %}
-                                <div style="display: flex" class="form-check">
-                                    <input type="checkbox"
-                                           id="cpt_{{ cpt.id }}"
-                                           name="{{ cpt.id }}"
-                                           data-model="selectedCompetences[]"
-                                           data-action="live#action"
-                                           data-live-action-param="changeCompetences"
-                                           value="{{ cpt.id }}"
-                                           class="form-check-input"
-                                            {{ cpt.id in this.selectedCompetences ? 'checked' : '' }}>
-                                    <label for="cpt_{{ cpt.id }}" style="margin-left: 10px"
-                                           class="form-check-label">{{ cpt.libelle }}</label>
-                                </div>
-                                <hr>
-                            {% endfor %}
-                        </fieldset>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Filtre groupes #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionGroupes">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-groupes">
-                    <button class="accordion-button collapsed" type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse-groupes"
-                            aria-expanded="false"
-                            aria-controls="collapse-groupes">
-                        Filtrer par groupes
-                    </button>
-                </h2>
-                <div id="collapse-groupes" class="accordion-collapse collapse"
-                     aria-labelledby="heading-groupes"
-                     data-bs-parent="#accordionGroupes">
-                    <div class="accordion-body row">
-                        <fieldset style="max-height: 200px; overflow-y: scroll;">
-                            {# ✅ Quand aucun semestre sélectionné : on affiche tous les groupes #}
-                            {% if this.selectedSemestreId == null %}
-                                {% for grp in this.groupes %}
-                                    {% if grp.typeGroupe.type == 'TP' %}
-                                        <div style="display: flex" class="form-check">
-                                            <input type="checkbox"
-                                                   id="grp_{{ grp.id }}"
-                                                   name="{{ grp.id }}"
-                                                   data-model="selectedGroupes[]"
-                                                   data-action="live#action"
-                                                   data-live-action-param="changeGroupes"
-                                                   value="{{ grp.id }}"
-                                                   class="form-check-input"
-                                                    {{ grp.id in this.selectedGroupes ? 'checked' : '' }}>
-                                            <label for="grp_{{ grp.id }}" style="margin-left: 10px"
-                                                   class="form-check-label">{{ grp.libelle }}</label>
-                                        </div>
-                                        <hr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                {# ✅ Quand un semestre est sélectionné : on filtre les groupes par parcours #}
-                                {% for grp in this.groupes|filter(grp => grp.apcParcours == null or grp.typeGroupe.semestre|filter(s => s.annee.diplome.apcParcours == grp.apcParcours)|length > 0) %}
-                                    {% if grp.typeGroupe.type == 'TP' %}
-                                        <small>
-                                            {% if grp.apcParcours is not null %}
-                                                {{ grp.apcParcours.code }} |
-                                                {% for semestre in grp.typeGroupe.semestre|filter(s => s.annee.diplome.apcParcours == grp.apcParcours) %}
-                                                    {{ semestre.libelle }}
-                                                {% endfor %}
-                                            {% else %}
-                                                S1
-                                            {% endif %}
-                                        </small>
-                                        <div style="display: flex" class="form-check">
-                                            <input type="checkbox"
-                                                   id="grp_{{ grp.id }}"
-                                                   name="{{ grp.id }}"
-                                                   data-model="selectedGroupes[]"
-                                                   data-action="live#action"
-                                                   data-live-action-param="changeGroupes"
-                                                   value="{{ grp.id }}"
-                                                   class="form-check-input"
-                                                    {{ grp.id in this.selectedGroupes ? 'checked' : '' }}>
-                                            <label for="grp_{{ grp.id }}" style="margin-left: 10px"
-                                                   class="form-check-label">{{ grp.libelle }}</label>
-                                        </div>
-                                        <hr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        </fieldset>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Filtre étudiants #}
-        <div class="accordion accordion-flush col-4 g-4 filter-drop" id="accordionEtudiants">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-etudiants">
-                    <button class="accordion-button collapsed" type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse-etudiants"
-                            aria-expanded="false"
-                            aria-controls="collapse-etudiants">
-                        Filtrer par étudiants
-                    </button>
-                </h2>
-                <div id="collapse-etudiants" class="accordion-collapse collapse"
-                     aria-labelledby="heading-etudiants"
-                     data-bs-parent="#accordionEtudiants">
-                    <div class="accordion-body row">
-                        <fieldset style="max-height: 200px; overflow-y: scroll;">
-                            {% for etudiant in this.etudiants %}
-                                <div style="display: flex" class="form-check">
-                                    <input type="checkbox"
-                                           id="etu_{{ etudiant.id }}"
-                                           name="{{ etudiant.id }}"
-                                           data-model="selectedEtudiants[]"
-                                           data-action="live#action"
-                                           data-live-action-param="changeEtudiants"
-                                           value="{{ etudiant.id }}"
-                                           class="form-check-input"
-                                            {{ etudiant.id in this.selectedEtudiants ? 'checked' : '' }}>
-                                    <label for="etu_{{ etudiant.id }}" style="margin-left: 10px"
-                                           class="form-check-label">
-                                        {{ etudiant.nom }} {{ etudiant.prenom }}
-                                    </label>
-                                </div>
-                                <hr>
-                            {% endfor %}
-                        </fieldset>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# Filtre état #}
-    <div class="row">
-        <div class="col-12">
-            <div class="filtre-btn">
-                <button class="btn btn-secondary"
-                        data-action="live#action"
-                        data-live-action-param="changeEtat"
-                        data-live-id-param="0"
-                        {{ this.selectedEtat == 0 ? 'disabled' : '' }}
-                >Tous les portfolios</button>
-
-                <button class="btn btn-secondary"
-                        data-action="live#action"
-                        data-live-action-param="changeEtat"
-                        data-live-id-param="1"
-                        {{ this.selectedEtat == 1 ? 'disabled' : '' }}
-                >Portfolios évalués</button>
-
-                <button class="btn btn-secondary"
-                        data-action="live#action"
-                        data-live-action-param="changeEtat"
-                        data-live-id-param="2"
-                        {{ this.selectedEtat == 2 ? 'disabled' : '' }}
-                >Portfolios non évalués</button>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        {% for portfolioId in this.allPortfolios %}
-            {{ component('PortfolioEvalCardComponent', {'id': portfolioId, 'key': portfolioId}) }}
+    <div class="ev-onglets" role="tablist" aria-label="Avancement de l'évaluation">
+        {% for s in this.statuts %}
+            <button type="button" role="tab" aria-selected="{{ s.value == actif.value ? 'true' : 'false' }}"
+                    class="ev-onglet ev-statut--{{ s.value }}"
+                    data-action="live#action" data-live-action-param="changerStatut"
+                    data-live-statut-param="{{ s.value }}">
+                <span class="ev-point"></span>
+                {{ s.libelle }}
+                <span class="ev-onglet__compte">{{ compteurs[s.value] }}</span>
+            </button>
         {% endfor %}
     </div>
 
-    <div class="btn-pages">
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goToFirstPage"
-                {{ this.currentPage == 1 or this.currentPage == 0 ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevrons-left"></i>
-        </button>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goPreviousPage"
-                {{ this.currentPage == 1 or this.currentPage == 0 ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-
-        <small>Page {{ this.currentPage }} / {{ this.getTotalPages }}</small>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goNextPage"
-                {{ this.currentPage == this.getTotalPages ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-
-        <button class="btn btn-primary"
-                data-action="live#action"
-                data-live-action-param="goToLastPage"
-                {{ this.currentPage == this.getTotalPages ? 'disabled' : '' }}
-        >
-            <i class="fa-solid fa-chevrons-right"></i>
-        </button>
+    <div class="ev-filtres">
+        <label>
+            <span class="ev-sur">Semestre</span>
+            <select data-model="semestreId">
+                <option value="0">Tous</option>
+                {% for semestre in this.semestres %}
+                    <option value="{{ semestre.id }}">{{ semestre.libelle }}{% if semestre.annee %} · {{ semestre.annee.libelle }}{% endif %}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="ev-sur">Groupe TP</span>
+            <select data-model="groupeId">
+                <option value="0">Tous</option>
+                {% for groupe in this.groupes %}
+                    <option value="{{ groupe.id }}">{{ groupe.libelle }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="ev-sur">Étudiant</span>
+            <select data-model="etudiantId">
+                <option value="0">Tous</option>
+                {% for etudiant in this.etudiants %}
+                    <option value="{{ etudiant.id }}">{{ etudiant.nom }} {{ etudiant.prenom }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="ev-sur">Compétence</span>
+            <select data-model="niveauId">
+                <option value="0">Toutes</option>
+                {% for niveau in this.niveaux %}
+                    <option value="{{ niveau.id }}">{{ niveau.competences ? niveau.competences.nomCourt ~ ' · ' }}{{ niveau.libelle }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% if this.filtre %}
+            <button type="button" class="ev-lien" data-action="live#action" data-live-action-param="reinitialiser">
+                Effacer les filtres
+            </button>
+        {% endif %}
     </div>
+
+    <div class="ev-table-zone" data-loading="addClass(ev-attente)">
+        <table class="ev-table">
+            <thead>
+            <tr>
+                <th scope="col">Étudiant</th>
+                <th scope="col">Portfolio</th>
+                <th scope="col">Semestre · groupe</th>
+                <th scope="col" class="ev-num">Évaluées</th>
+                <th scope="col" class="ev-num">Modifié le</th>
+                <th scope="col"><span class="visually-hidden">Action</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for ligne in this.lignes %}
+                {% set portfolio = ligne.portfolio %}
+                {% set etudiant = portfolio.etudiant %}
+                <tr class="ev-statut--{{ actif.value }}" data-live-id="portfolio-{{ portfolio.id }}">
+                    <th scope="row">{{ etudiant.nom|upper }} {{ etudiant.prenom }}</th>
+                    <td>{{ portfolio.intitule|default('Sans titre') }}</td>
+                    <td>
+                        {{ etudiant.semestre.libelle }}
+                        {% for g in etudiant.groupe %}{% if g.typeGroupe and g.typeGroupe.type == 'TP' %} · {{ g.libelle }}{% endif %}{% endfor %}
+                    </td>
+                    <td class="ev-num">{{ ligne.evaluees }}/{{ ligne.total }}</td>
+                    <td class="ev-num">{{ portfolio.dateModification ? portfolio.dateModification|date('d.m.Y') : '—' }}</td>
+                    <td class="ev-action">
+                        <a href="{{ path('app_evaluation_portfolio', {id: portfolio.id}) }}">
+                            {{ actif.value == 'a_evaluer' ? 'Évaluer' : (actif.value == 'en_cours' ? 'Reprendre' : 'Consulter') }}
+                            <span aria-hidden="true">→</span>
+                        </a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="ev-vide">
+                        {% if not this.dataUserSession.departement %}
+                            Aucun département actif.
+                        {% else %}
+                            Aucun portfolio dans « {{ actif.libelle }} »{{ this.filtre ? ' avec ces filtres' }}.
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if this.nombrePages > 1 %}
+        <nav class="ev-pagination" aria-label="Pagination">
+            <button type="button" class="ev-btn" {{ this.pageCourante == 1 ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="allerPage"
+                    data-live-page-param="{{ this.pageCourante - 1 }}">Précédent</button>
+            <span class="ev-num">Page {{ this.pageCourante }} / {{ this.nombrePages }}</span>
+            <button type="button" class="ev-btn" {{ this.pageCourante == this.nombrePages ? 'disabled' }}
+                    data-action="live#action" data-live-action-param="allerPage"
+                    data-live-page-param="{{ this.pageCourante + 1 }}">Suivant</button>
+        </nav>
+    {% endif %}
 </div>

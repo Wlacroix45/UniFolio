@@ -27,7 +27,6 @@ final class PortfolioEvaluationComponent extends BaseController
     #[LiveProp]
     public int $portfolioId = 0;
 
-    /** @var array<string, int|string> */
     #[LiveProp(writable: true)]
     public array $etats = [];
 
@@ -101,7 +100,6 @@ final class PortfolioEvaluationComponent extends BaseController
         return $this->evaluation->getParties($this->getPortfolio());
     }
 
-    /** @return array<int, string> */
     public function getNiveaux(): array
     {
         return EvaluationPortfolio::NIVEAUX;
@@ -191,7 +189,6 @@ final class PortfolioEvaluationComponent extends BaseController
         return $this->dataUserSession->getEnseignant();
     }
 
-    /** @return array<int, int|string> */
     private function getEtatsParId(): array
     {
         $etats = [];

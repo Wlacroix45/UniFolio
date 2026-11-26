@@ -26,7 +26,6 @@ class EvaluationPortfolio
     ) {
     }
 
-    /** @return list<array{page: Page, traces: list<Trace>}> */
     public function getParties(Portfolio $portfolio): array
     {
         $ordrePages = $portfolio->getOrdrePages()->toArray();
@@ -55,7 +54,6 @@ class EvaluationPortfolio
         return $parties;
     }
 
-    /** @return array<int, Validation> */
     public function getValidations(Portfolio $portfolio): array
     {
         $validations = [];
@@ -70,7 +68,6 @@ class EvaluationPortfolio
         return $validations;
     }
 
-    /** @param array<int, int|string> $etats */
     public function enregistrer(Portfolio $portfolio, array $etats, ?Enseignant $enseignant): void
     {
         $this->verifierModifiable($portfolio);
@@ -80,7 +77,6 @@ class EvaluationPortfolio
         $this->entityManager->flush();
     }
 
-    /** @param array<int, int|string> $etats */
     public function valider(Portfolio $portfolio, array $etats, ?Enseignant $enseignant): void
     {
         $this->verifierModifiable($portfolio);
@@ -134,10 +130,6 @@ class EvaluationPortfolio
         }
     }
 
-    /**
-     * @param array<int, int|string> $etats
-     * @return array<int, int>
-     */
     private function normaliser(Portfolio $portfolio, array $etats): array
     {
         $validations = $this->getValidations($portfolio);
@@ -156,10 +148,6 @@ class EvaluationPortfolio
         return $normalises;
     }
 
-    /**
-     * @param array<int, Validation> $validations
-     * @param array<int, int>        $etats
-     */
     private function appliquer(array $validations, array $etats, ?Enseignant $enseignant): void
     {
         foreach ($etats as $id => $etat) {
