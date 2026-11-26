@@ -149,7 +149,10 @@
 
                     <div class="ev-prose">{{ this.trace.description|default('')|sanitize_html('texte_etudiant') }}</div>
 
-                    {% set canEvaluate = is_granted('DEPARTEMENT_EVALUATE', this.trace) %}
+                    {% set canEvaluate = is_granted('DEPARTEMENT_EVALUATE', this.trace) and not this.verrouillee %}
+                    {% if this.verrouillee %}
+                        <p class="text-muted">L'évaluation du portfolio contenant cette trace est validée : la grille est verrouillée.</p>
+                    {% endif %}
                     <ul class="dashboard-competences">
                         {% for validation in this.trace.validations %}
                             <li>
@@ -492,5 +495,3 @@
 
     </div>
 </div>
-
-

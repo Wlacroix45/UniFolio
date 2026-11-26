@@ -16,6 +16,7 @@ use App\Repository\CommentaireRepository;
 use App\Repository\TraceRepository;
 use App\Repository\ValidationRepository;
 use App\Security\Voter\DepartementVoter;
+use App\Service\EvaluationPortfolio;
 use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -66,7 +67,8 @@ class AbstractTraceEvalComponent extends BaseController
         protected ValidationRepository $validationRepository,
         protected CommentaireRepository $commentaireRepository,
         #[Required] public Security $security,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        protected EvaluationPortfolio $evaluationPortfolio
     ) {
 //        $this->Trace = $this->getTrace();
 
@@ -89,6 +91,12 @@ class AbstractTraceEvalComponent extends BaseController
         $validation = $this->validationRepository->find($validationId);
         if ($validation === null || $validation->getTrace()?->getId() !== $trace->getId()) {
             throw $this->createAccessDeniedException('Cette validation n\'appartient pas à la trace.');
+        }
+        if ($this->evaluationPortfolio->isTraceVerrouillee($trace)) {
+            throw $this->createAccessDeniedException('L\'évaluation de ce portfolio est validée.');
+        }
+        if (!isset(EvaluationPortfolio::NIVEAUX[$state])) {
+            return;
         }
 
         // Mettre à jour le validation dans la base de données
@@ -206,6 +214,11 @@ class AbstractTraceEvalComponent extends BaseController
     public function controlerAcces(): void
     {
         $this->denyAccessUnlessGranted(DepartementVoter::VIEW, $this->getTrace());
+    }
+
+    public function isVerrouillee(): bool
+    {
+        return $this->evaluationPortfolio->isTraceVerrouillee($this->getTrace());
     }
 
     public function getTrace(): ?Trace

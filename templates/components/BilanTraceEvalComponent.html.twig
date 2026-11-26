@@ -83,7 +83,7 @@
                                                        </span> •
                         {{ validation.apcNiveau.libelle }}
                     </div>
-                    <fieldset{% if not is_granted('DEPARTEMENT_EVALUATE', this.trace) %} disabled{% endif %}>
+                    <fieldset{% if not is_granted('DEPARTEMENT_EVALUATE', this.trace) or this.verrouillee %} disabled{% endif %}>
                         <div>
                             <div class="form-check">
                                 {% if validation.etat == 1 %}

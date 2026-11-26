@@ -60,6 +60,16 @@ class Portfolio
     #[ORM\Column]
     private ?bool $opt_search = null;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateBrouillonEvaluation = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateValidationEvaluation = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Enseignant $validateurEvaluation = null;
+
     public function __construct()
     {
         $this->date_creation = new \DateTime();
@@ -283,5 +293,46 @@ class Portfolio
         $this->opt_search = $opt_search;
 
         return $this;
+    }
+
+    public function getDateBrouillonEvaluation(): ?\DateTimeImmutable
+    {
+        return $this->dateBrouillonEvaluation;
+    }
+
+    public function setDateBrouillonEvaluation(?\DateTimeImmutable $date): static
+    {
+        $this->dateBrouillonEvaluation = $date;
+
+        return $this;
+    }
+
+    public function getDateValidationEvaluation(): ?\DateTimeImmutable
+    {
+        return $this->dateValidationEvaluation;
+    }
+
+    public function setDateValidationEvaluation(?\DateTimeImmutable $date): static
+    {
+        $this->dateValidationEvaluation = $date;
+
+        return $this;
+    }
+
+    public function getValidateurEvaluation(): ?Enseignant
+    {
+        return $this->validateurEvaluation;
+    }
+
+    public function setValidateurEvaluation(?Enseignant $enseignant): static
+    {
+        $this->validateurEvaluation = $enseignant;
+
+        return $this;
+    }
+
+    public function isEvaluationValidee(): bool
+    {
+        return $this->dateValidationEvaluation !== null;
     }
 }
