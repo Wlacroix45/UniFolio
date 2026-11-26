@@ -11,6 +11,7 @@ use App\Entity\Diplome;
 use App\Entity\Enseignant;
 use App\Entity\Etudiant;
 use App\Entity\Portfolio;
+use App\Entity\PortfolioTemplate;
 use App\Entity\Semestre;
 use App\Entity\Trace;
 use App\Entity\Users;
@@ -173,5 +174,56 @@ class DepartementVoterTest extends TestCase
 
         $userToken = $this->createToken(new Users());
         $this->assertSame(VoterInterface::ACCESS_ABSTAIN, $this->voter->vote($userToken, $this->deptInfo, ['OTHER_ATTR']));
+    }
+
+    public function testPortfolioTemplateDepartmentAccess(): void
+    {
+        $templateInfo = (new PortfolioTemplate())
+            ->setNom('Modèle INFO')
+            ->setDepartement($this->deptInfo);
+        $templateGea = (new PortfolioTemplate())
+            ->setNom('Modèle GEA')
+            ->setDepartement($this->deptGea);
+        $templateChimie = (new PortfolioTemplate())
+            ->setNom('Modèle CHIMIE')
+            ->setDepartement($this->deptChimie);
+
+        // ROLE_ADMIN -> accès complet sur tous les modèles
+        $admin = (new Users())->setRoles(['ROLE_ADMIN']);
+        $adminToken = $this->createToken($admin);
+        foreach ([$templateInfo, $templateGea, $templateChimie] as $tpl) {
+            $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($adminToken, $tpl, [DepartementVoter::VIEW]));
+            $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($adminToken, $tpl, [DepartementVoter::EDIT]));
+        }
+
+        // Enseignant EDITEUR sur INFO, EVALUATEUR sur GEA, non rattaché à CHIMIE
+        $enseignant = new Enseignant();
+        $enseignant->addDepartement($this->deptInfo, DepartementRoleEnum::EDITEUR);
+        $enseignant->addDepartement($this->deptGea, DepartementRoleEnum::EVALUATEUR);
+        $teacherUser = (new Users())->setRoles(['ROLE_EDITEUR'])->setEnseignant($enseignant);
+        $teacherToken = $this->createToken($teacherUser);
+
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($teacherToken, $templateInfo, [DepartementVoter::VIEW]));
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($teacherToken, $templateInfo, [DepartementVoter::EDIT]));
+
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($teacherToken, $templateGea, [DepartementVoter::VIEW]));
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $this->voter->vote($teacherToken, $templateGea, [DepartementVoter::EDIT]));
+
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $this->voter->vote($teacherToken, $templateChimie, [DepartementVoter::VIEW]));
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $this->voter->vote($teacherToken, $templateChimie, [DepartementVoter::EDIT]));
+
+        // Étudiant de INFO -> VIEW sur INFO, refusé sur EDIT et sur GEA
+        $diplome = new Diplome();
+        $diplome->setDepartement($this->deptInfo);
+        $annee = (new Annee())->setDiplome($diplome);
+        $semestre = (new Semestre())->setAnnee($annee);
+        $etudiant = new Etudiant();
+        $etudiant->setSemestre($semestre);
+        $studentUser = (new Users())->setRoles(['ROLE_ETUDIANT'])->setEtudiant($etudiant);
+        $studentToken = $this->createToken($studentUser);
+
+        $this->assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($studentToken, $templateInfo, [DepartementVoter::VIEW]));
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $this->voter->vote($studentToken, $templateInfo, [DepartementVoter::EDIT]));
+        $this->assertSame(VoterInterface::ACCESS_DENIED, $this->voter->vote($studentToken, $templateGea, [DepartementVoter::VIEW]));
     }
 }
