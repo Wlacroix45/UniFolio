@@ -1,0 +1,102 @@
+<aside{{ attributes.defaults({class: 'ev-panneau', 'aria-label': 'Évaluation'}) }}>
+    {% set portfolio = this.portfolio %}
+    {% set modifiable = this.modifiable %}
+    {% set niveaux = this.niveaux %}
+
+    {{ include('evaluation/_profil.html.twig', {
+        etudiant: portfolio.etudiant,
+        statut: this.statut,
+        evaluees: this.nombreEvaluees,
+        total: this.nombreCompetences,
+    }) }}
+
+    <div class="ev-panneau__corps">
+        {{ include('evaluation/_reflexions.html.twig') }}
+
+        <section class="ev-bloc">
+            <h3 class="ev-sur">Grille d'évaluation</h3>
+
+            {% if portfolio.evaluationValidee %}
+                <p class="ev-note">
+                    Validée le <span class="ev-num">{{ portfolio.dateValidationEvaluation|date('d.m.Y à H:i') }}</span>
+                    {% if portfolio.validateurEvaluation %}
+                        par {{ portfolio.validateurEvaluation.prenom }} {{ portfolio.validateurEvaluation.nom }}
+                    {% endif %}
+                </p>
+            {% elseif not this.peutEvaluer %}
+                <p class="ev-note">Consultation seule : vous n'avez pas le rôle d'évaluateur dans ce département.</p>
+            {% endif %}
+
+            {% for partie in this.parties %}
+                {% for trace in partie.traces %}
+                    {% if trace.validations is not empty %}
+                        <div class="ev-grille">
+                            <a class="ev-grille__trace" href="#trace-{{ trace.id }}">{{ trace.titre|default('Trace sans titre') }}</a>
+                            {% for validation in trace.validations %}
+                                {% set niveau = validation.apcNiveau %}
+                                <fieldset class="ev-critere" {{ not modifiable ? 'disabled' }}>
+                                    <legend class="{{ niveau.competences ? niveau.competences.couleur }}">
+                                        <strong>{{ niveau.competences ? niveau.competences.nomCourt }}</strong>
+                                        <span>{{ niveau.libelle }}</span>
+                                    </legend>
+                                    <div class="ev-choix">
+                                        {% for valeur, libelle in niveaux %}
+                                            <label>
+                                                <input type="radio" name="v{{ validation.id }}" value="{{ valeur }}"
+                                                       data-model="norender|etats.v{{ validation.id }}">
+                                                <span>{{ libelle }}</span>
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                </fieldset>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+
+            {% if this.nombreCompetences == 0 %}
+                <p class="ev-vide">Aucune compétence revendiquée dans ce portfolio.</p>
+            {% endif %}
+        </section>
+
+        <section class="ev-bloc">
+            <h3 class="ev-sur">Appréciation</h3>
+            {% for commentaire in portfolio.commentaires %}
+                <p class="ev-appreciation">
+                    <strong>{{ commentaire.enseignant ? commentaire.enseignant.prenom ~ ' ' ~ commentaire.enseignant.nom : 'Administrateur' }}</strong>
+                    · {{ commentaire.visibilite ? 'visible par l\'étudiant' : 'privée' }}<br>
+                    {{ commentaire.contenu }}
+                </p>
+            {% endfor %}
+            {% if modifiable %}
+                <textarea rows="4" data-model="norender|appreciation" aria-label="Nouvelle appréciation"
+                          placeholder="Ajouter une appréciation (facultatif)"></textarea>
+                <label class="ev-case">
+                    <input type="checkbox" data-model="norender|appreciationVisible">
+                    Visible par l'étudiant
+                </label>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="ev-actions">
+        <p class="ev-retour{{ this.erreur ? ' ev-retour--erreur' }}{{ this.succes ? ' ev-retour--succes' }}"
+           role="status">{{ this.erreur ?? this.succes }}</p>
+        {% if modifiable %}
+            <div class="ev-actions__boutons">
+                <button type="button" class="ev-btn" data-action="live#action" data-live-action-param="enregistrer"
+                        data-loading="addAttribute(disabled)">
+                    Enregistrer (En cours)
+                </button>
+                <button type="button" class="ev-btn ev-btn--principal"
+                        data-controller="confirmation"
+                        data-confirmation-message-value="Valider l'évaluation ? Elle sera verrouillée et ne pourra plus être modifiée."
+                        data-action="confirmation#demander live#action"
+                        data-live-action-param="valider" data-loading="addAttribute(disabled)">
+                    Valider l'évaluation
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</aside>

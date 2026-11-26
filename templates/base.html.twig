@@ -11,7 +11,7 @@
         {{ encore_entry_link_tags('app') }}
     {% endblock %}
 </head>
-<body {{ stimulus_controller('tracesFiltres', { url: path('app_trace')}) }}{{ stimulus_target('tracesFiltres', 'traceZone') }}>
+<body class="{% block body_class %}{% endblock %}" {{ stimulus_controller('tracesFiltres', { url: path('app_trace')}) }}{{ stimulus_target('tracesFiltres', 'traceZone') }}>
 <header>
     {% block header %}
     {% endblock %}

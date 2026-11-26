@@ -1,0 +1,56 @@
+<section class="ev-partie" id="cv">
+    <header class="ev-partie__tete">
+        <span class="ev-num">CV</span>
+        <div>
+            <h2>{{ cv.poste|default('Curriculum vitæ') }}</h2>
+            {% if cv.description %}<p>{{ cv.description }}</p>{% endif %}
+        </div>
+    </header>
+
+    {% for titre, liste in {
+        'Compétences comportementales': cv.softSkills,
+        'Compétences techniques': cv.hardSkills,
+        'Langues': cv.langues,
+        'Réseaux': cv.reseaux,
+    } %}
+        {% if liste %}
+            <div class="ev-cv-bloc">
+                <h3>{{ titre }}</h3>
+                <ul>
+                    {% for element in liste %}
+                        <li>
+                            {% if titre == 'Réseaux' and element|url_sure %}
+                                <a href="{{ element|url_sure }}" target="_blank" rel="noopener noreferrer">{{ element }}</a>
+                            {% else %}
+                                {{ element }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    {% for titre, entrees in {'Expériences': cv.experience, 'Formations': cv.formation} %}
+        {% if entrees is not empty %}
+            <div class="ev-cv-bloc">
+                <h3>{{ titre }}</h3>
+                {% for entree in entrees %}
+                    <div class="ev-cv-entree">
+                        <span class="ev-num">
+                            {{ entree.dateDebut ? entree.dateDebut|date('m.Y') }} — {{ entree.dateFin ? entree.dateFin|date('m.Y') : 'aujourd\'hui' }}
+                        </span>
+                        {% if titre == 'Expériences' %}
+                            <strong>{{ entree.poste }}</strong> · {{ entree.entreprise }}
+                        {% else %}
+                            <strong>{{ entree.diplome }}</strong> · {{ entree.etablissement }}
+                        {% endif %}
+                        {% if entree.activite %}
+                            <ul>{% for activite in entree.activite %}<li>{{ activite }}</li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</section>

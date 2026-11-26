@@ -1,0 +1,21 @@
+<header class="ev-profil ev-statut--{{ statut.value }}">
+    <h2>{{ etudiant.prenom }} <span>{{ etudiant.nom }}</span></h2>
+    <dl class="ev-meta">
+        <div>
+            <dt>Semestre</dt>
+            <dd>{{ etudiant.semestre ? etudiant.semestre.libelle : '—' }}</dd>
+        </div>
+        <div>
+            <dt>Groupe</dt>
+            <dd>{{ etudiant.groupesAsString|default('—') }}</dd>
+        </div>
+        {% set parcours = etudiant.groupe.toArray|map(g => g.apcParcours)|filter(p => p is not null)|first %}
+        {% if parcours %}
+            <div><dt>Parcours</dt><dd>{{ parcours.libelle }}</dd></div>
+        {% endif %}
+        <div>
+            <dt>Avancement</dt>
+            <dd><span class="ev-point"></span> {{ statut.libelleSingulier }} · <span class="ev-num">{{ evaluees }}/{{ total }}</span></dd>
+        </div>
+    </dl>
+</header>

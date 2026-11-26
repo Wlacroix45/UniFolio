@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniFolio - Évaluation · {{ portfolio.etudiant.prenom }} {{ portfolio.etudiant.nom }}{% endblock %}
+
+{% block body_class %}page-evaluation{% endblock %}
+
+{% block body %}
+    <div class="ev ev-vue">
+        <div class="ev-barre">
+            <a href="{{ path('enseignant_dashboard') }}" class="ev-barre__retour">← Portfolios</a>
+            <h1 class="ev-barre__titre">{{ portfolio.intitule|default('Portfolio sans titre') }}</h1>
+            {% if portfolio.annee %}<span class="ev-barre__annee">{{ portfolio.annee.libelle }}</span>{% endif %}
+        </div>
+
+        <div class="ev-split">
+            <div class="ev-portfolio" tabindex="0" aria-label="Portfolio de l'étudiant">
+                <nav class="ev-sommaire" aria-label="Parties du portfolio">
+                    {% for partie in parties %}
+                        <a href="#partie-{{ partie.page.id }}">
+                            <span class="ev-num">{{ '%02d'|format(loop.index) }}</span>
+                            {{ partie.page.intitule|default('Partie sans titre') }}
+                        </a>
+                    {% endfor %}
+                    {% if portfolio.cv %}<a href="#cv">CV</a>{% endif %}
+                </nav>
+
+                {% if portfolio.description %}
+                    <div class="ev-chapeau">{{ portfolio.description|default('')|sanitize_html('texte_etudiant') }}</div>
+                {% endif %}
+
+                {% for partie in parties %}
+                    <section class="ev-partie" id="partie-{{ partie.page.id }}">
+                        <header class="ev-partie__tete">
+                            <span class="ev-num">{{ '%02d'|format(loop.index) }}</span>
+                            <div>
+                                <h2>{{ partie.page.intitule|default('Partie sans titre') }}</h2>
+                                {% if partie.page.description %}<p>{{ partie.page.description }}</p>{% endif %}
+                            </div>
+                        </header>
+
+                        {% for trace in partie.traces %}
+                            {{ include('evaluation/_trace.html.twig', {trace: trace}) }}
+                        {% else %}
+                            <p class="ev-vide">Aucune trace dans cette partie.</p>
+                        {% endfor %}
+                    </section>
+                {% else %}
+                    <p class="ev-vide">Ce portfolio ne contient aucune partie.</p>
+                {% endfor %}
+
+                {% if portfolio.cv %}
+                    {{ include('evaluation/_cv.html.twig', {cv: portfolio.cv}) }}
+                {% endif %}
+            </div>
+
+            {{ component('PortfolioEvaluationComponent', {portfolioId: portfolio.id}) }}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,70 @@
+<article class="ev-trace" id="trace-{{ trace.id }}">
+    <h3>{{ trace.titre|default('Trace sans titre') }}</h3>
+
+    <dl class="ev-meta">
+        {% if trace.dateRealisation %}
+            <div><dt>Réalisée le</dt><dd class="ev-num">{{ trace.dateRealisation|date('d.m.Y') }}</dd></div>
+        {% endif %}
+        {% if trace.contexte %}<div><dt>Contexte</dt><dd>{{ trace.contexte }}</dd></div>{% endif %}
+        <div><dt>Conception IA</dt><dd>{{ trace.conceptionIa.libelle }}</dd></div>
+        <div><dt>Réalisation IA</dt><dd>{{ trace.realisationIa.libelle }}</dd></div>
+    </dl>
+
+    {% if trace.validations is not empty %}
+        <ul class="ev-competences" aria-label="Compétences revendiquées">
+            {% for validation in trace.validations %}
+                {% set niveau = validation.apcNiveau %}
+                <li class="ev-competence {{ niveau.competences ? niveau.competences.couleur }}">
+                    <strong>{{ niveau.competences ? niveau.competences.nomCourt }}</strong>
+                    <span>{{ niveau.libelle }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if trace.contenu %}
+        {% set type = trace.typeTrace|default('') %}
+        <figure class="ev-medias">
+            {% for brut in trace.contenu %}
+                {% set url = brut|url_sure %}
+                {% if url is null %}
+                    <span class="ev-vide">Média non affichable (adresse invalide).</span>
+                {% else %}
+                    {% set src = asset(url) %}
+                    {% if 'TraceTypeImage' in type %}
+                        <a href="{{ src }}" target="_blank" rel="noopener">
+                            <img src="{{ src }}" alt="{{ trace.legende|default(trace.titre) }}" loading="lazy">
+                        </a>
+                    {% elseif 'TraceTypePdf' in type %}
+                        <iframe src="{{ src }}" title="PDF : {{ trace.titre }}" class="ev-pdf" loading="lazy"></iframe>
+                        <a href="{{ src }}" target="_blank" rel="noopener">Ouvrir le PDF ↗</a>
+                    {% elseif 'TraceTypeVideo' in type %}
+                        <iframe src="{{ src }}" title="Vidéo : {{ trace.titre }}" class="ev-video" loading="lazy"
+                                allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                        <a href="{{ src }}" target="_blank" rel="noopener">Ouvrir la vidéo ↗</a>
+                    {% else %}
+                        <a href="{{ src }}" target="_blank" rel="noopener noreferrer">{{ url }} ↗</a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% if trace.legende %}<figcaption>{{ trace.legende }}</figcaption>{% endif %}
+        </figure>
+    {% endif %}
+
+    {% if trace.description %}
+        <div class="ev-prose">{{ trace.description|default('')|sanitize_html('texte_etudiant') }}</div>
+    {% endif %}
+
+    {% if trace.commentaires is not empty %}
+        <details class="ev-commentaires">
+            <summary>Commentaires sur la trace ({{ trace.commentaires|length }})</summary>
+            {% for commentaire in trace.commentaires %}
+                <p>
+                    <strong>{{ commentaire.enseignant ? commentaire.enseignant.prenom ~ ' ' ~ commentaire.enseignant.nom : 'Administrateur' }}</strong>
+                    · {{ commentaire.visibilite ? 'public' : 'privé' }}<br>
+                    {{ commentaire.contenu }}
+                </p>
+            {% endfor %}
+        </details>
+    {% endif %}
+</article>

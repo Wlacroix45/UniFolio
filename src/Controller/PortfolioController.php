@@ -97,6 +97,15 @@ class PortfolioController extends BaseController
         }
 
 
+        if (
+            $request->isMethod('GET')
+            && $user->getEtudiant() === null
+            && $portfolio->isVisibilite()
+            && $this->isGranted(DepartementVoter::EVALUATE, $portfolio)
+        ) {
+            return $this->redirectToRoute('app_evaluation_portfolio', ['id' => $portfolio->getId()]);
+        }
+
         if ($this->security->getUser()->getEnseignant()) {
             $enseignant = $this->security->getUser()->getEnseignant();
 
