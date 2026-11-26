@@ -1,10 +1,5 @@
 <?php
 
-/*
- * Copyright (c) 2023. | Cyndel Herolt | IUT de Troyes  - All Rights Reserved
- * @author cyndelherolt
- * @project UniFolio
- */
 namespace App\Controller\SynchroIntranet;
 
 use App\Entity\ApcApprentissageCritique;
@@ -94,10 +89,10 @@ class ReferentielSynchro extends AbstractController
         $referentiels = $referentiels->toArray();
         foreach ($referentiels as $referentiel) {
             $dept = $departementRepository->findOneBy(['id' => $referentiel['departement']]);
-            $existingReferentiel = $referentielRepository->findOneBy(['id' => $referentiel['id']]);
+            $existingReferentiel = $referentielRepository->findOneBy(['intranetId' => $referentiel['id']]);
             //Vérifier si le libelle du département existe déjà en base de données
             if ($existingReferentiel) {
-                $existingReferentiel->setId($referentiel['id']);
+                $existingReferentiel->setIntranetId($referentiel['id']);
                 $existingReferentiel->setLibelle($referentiel['libelle']);
                 $existingReferentiel->setDescription($referentiel['description']);
                 $existingReferentiel->setAnneePublication($referentiel['annee']);
@@ -106,7 +101,7 @@ class ReferentielSynchro extends AbstractController
             } else {
                 //Sinon, on le crée
                 $newReferentiel = new ApcReferentiel();
-                $newReferentiel->setId($referentiel['id']);
+                $newReferentiel->setIntranetId($referentiel['id']);
                 $newReferentiel->setLibelle($referentiel['libelle']);
                 $newReferentiel->setDescription($referentiel['description']);
                 $newReferentiel->setAnneePublication($referentiel['annee']);
@@ -134,20 +129,20 @@ class ReferentielSynchro extends AbstractController
 
         $parcours = $parcours->toArray();
         foreach ($parcours as $apcParcours) {
-            $referentiel = $referentielRepository->findOneBy(['id' => $apcParcours['referentiel']]);
+            $referentiel = $referentielRepository->findOneBy(['intranetId' => $apcParcours['referentiel']]);
 
             if ($referentiel) {
-                $existingParcours = $parcoursRepository->findOneBy(['id' => $apcParcours['id']]);
+                $existingParcours = $parcoursRepository->findOneBy(['intranetId' => $apcParcours['id']]);
                 //Vérifier si le libelle du département existe déjà en base de données
                 if ($existingParcours) {
-                    $existingParcours->setId($apcParcours['id']);
+                    $existingParcours->setIntranetId($apcParcours['id']);
                     $existingParcours->setLibelle($apcParcours['libelle']);
                     $existingParcours->setCode($apcParcours['code']);
                     $existingParcours->setActif($apcParcours['actif']);
                     $existingParcours->setApcReferentiel($referentiel);
 //                    $existingParcours->setFormationContinue($apcParcours['formation_continue']);
 //                    foreach ($apcParcours['niveaux'] as $niveau) {
-//                        $existingNiveau = $niveauRepository->findOneBy(['id' => $niveau['id']]);
+//                        $existingNiveau = $niveauRepository->findOneBy(['intranetId' => $niveau['id']]);
 //                        if ($existingNiveau) {
 //                            $existingParcours->addApcNiveau($existingNiveau);
 //                        }
@@ -156,14 +151,14 @@ class ReferentielSynchro extends AbstractController
                 } else {
                     //Sinon, on le crée
                     $newParcours = new ApcParcours();
-                    $newParcours->setId($apcParcours['id']);
+                    $newParcours->setIntranetId($apcParcours['id']);
                     $newParcours->setLibelle($apcParcours['libelle']);
                     $newParcours->setCode($apcParcours['code']);
                     $newParcours->setActif($apcParcours['actif']);
                     $newParcours->setApcReferentiel($referentiel);
 //                    $newParcours->setFormationContinue($apcParcours['formation_continue']);
 //                    foreach($apcParcours['niveaux'] as $niveau) {
-//                        $existingNiveau = $niveauRepository->findOneBy(['id' => $niveau['id']]);
+//                        $existingNiveau = $niveauRepository->findOneBy(['intranetId' => $niveau['id']]);
 //                        if ($existingNiveau) {
 //                            $newParcours->addApcNiveau($existingNiveau);
 //                        }
@@ -195,11 +190,11 @@ class ReferentielSynchro extends AbstractController
         $competences = $competences->toArray();
 
         foreach ($competences as $competence) {
-            $referentiel = $referentielRepository->findOneBy(['id' => $competence['referentiel']]);
-            $existingCompetence = $competenceRepository->findOneBy(['id' => $competence['id']]);
+            $referentiel = $referentielRepository->findOneBy(['intranetId' => $competence['referentiel']]);
+            $existingCompetence = $competenceRepository->findOneBy(['intranetId' => $competence['id']]);
             //Vérifier si le libelle du département existe déjà en base de données
             if ($existingCompetence) {
-                $existingCompetence->setId($competence['id']);
+                $existingCompetence->setIntranetId($competence['id']);
                 $existingCompetence->setLibelle($competence['libelle']);
                 $existingCompetence->setNomCourt($competence['nom_court']);
                 $existingCompetence->setCouleur($competence['couleur']);
@@ -208,7 +203,7 @@ class ReferentielSynchro extends AbstractController
             } else {
                 //Sinon, on le crée
                 $newCompetence = new Competence();
-                $newCompetence->setId($competence['id']);
+                $newCompetence->setIntranetId($competence['id']);
                 $newCompetence->setLibelle($competence['libelle']);
                 $newCompetence->setNomCourt($competence['nom_court']);
                 $newCompetence->setCouleur($competence['couleur']);
@@ -235,17 +230,17 @@ class ReferentielSynchro extends AbstractController
 
         $niveaux = $niveaux->toArray();
         foreach ($niveaux as $niveau) {
-            $competence = $competenceRepository->findOneBy(['id' => $niveau['competences']]);
+            $competence = $competenceRepository->findOneBy(['intranetId' => $niveau['competences']]);
 
-            $existingNiveau = $niveauRepository->findOneBy(['id' => $niveau['id']]);
+            $existingNiveau = $niveauRepository->findOneBy(['intranetId' => $niveau['id']]);
             //Vérifier si le libelle du département existe déjà en base de données
             if ($existingNiveau) {
-                $existingNiveau->setId($niveau['id']);
+                $existingNiveau->setIntranetId($niveau['id']);
                 $existingNiveau->setLibelle($niveau['libelle']);
                 $existingNiveau->setOrdre($niveau['ordre']);
                 $existingNiveau->setCompetences($competence);
                 foreach ($niveau['parcours'] as $parcours) {
-                    $existingParcours = $parcoursRepository->findOneBy(['id' => $parcours['id']]);
+                    $existingParcours = $parcoursRepository->findOneBy(['intranetId' => $parcours['id']]);
                     if ($existingParcours && $existingNiveau) {
                         if (!$existingNiveau->getApcParcours()->contains($existingParcours)) {
                             $existingNiveau->addApcParcour($existingParcours);
@@ -256,12 +251,12 @@ class ReferentielSynchro extends AbstractController
             } else {
                 //Sinon, on le crée
                 $newNiveau = new ApcNiveau();
-                $newNiveau->setId($niveau['id']);
+                $newNiveau->setIntranetId($niveau['id']);
                 $newNiveau->setLibelle($niveau['libelle']);
                 $newNiveau->setOrdre($niveau['ordre']);
                 $newNiveau->setCompetences($competence);
                 foreach ($niveau['parcours'] as $parcours) {
-                    $existingParcours = $parcoursRepository->findOneBy(['id' => $parcours['id']]);
+                    $existingParcours = $parcoursRepository->findOneBy(['intranetId' => $parcours['id']]);
                     if ($existingParcours && $newNiveau) {
                         if (!$newNiveau->getApcParcours()->contains($existingParcours)) {
                             $newNiveau->addApcParcour($existingParcours);
@@ -292,11 +287,11 @@ class ReferentielSynchro extends AbstractController
 
         $apprentissagesCritiques = $apprentissagesCritiques->toArray();
         foreach ($apprentissagesCritiques as $apprentissageCritique) {
-            $niveau = $niveauRepository->findOneBy(['id' => $apprentissageCritique['niveau']]);
-            $existingApprentissageCritique = $apprentissageCritiqueRepository->findOneBy(['id' => $apprentissageCritique['id']]);
+            $niveau = $niveauRepository->findOneBy(['intranetId' => $apprentissageCritique['niveau']]);
+            $existingApprentissageCritique = $apprentissageCritiqueRepository->findOneBy(['intranetId' => $apprentissageCritique['id']]);
             //Vérifier si le libelle du département existe déjà en base de données
             if ($existingApprentissageCritique) {
-                $existingApprentissageCritique->setId($apprentissageCritique['id']);
+                $existingApprentissageCritique->setIntranetId($apprentissageCritique['id']);
                 $existingApprentissageCritique->setLibelle($apprentissageCritique['libelle']);
                 $existingApprentissageCritique->setCode($apprentissageCritique['code']);
                 $existingApprentissageCritique->setNiveaux($niveau);
@@ -304,7 +299,7 @@ class ReferentielSynchro extends AbstractController
             } else {
                 //Sinon, on le créé
                 $newApprentissageCritique = new ApcApprentissageCritique();
-                $newApprentissageCritique->setId($apprentissageCritique['id']);
+                $newApprentissageCritique->setIntranetId($apprentissageCritique['id']);
                 $newApprentissageCritique->setLibelle($apprentissageCritique['libelle']);
                 $newApprentissageCritique->setCode($apprentissageCritique['code']);
                 $newApprentissageCritique->setNiveaux($niveau);
