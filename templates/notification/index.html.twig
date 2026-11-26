@@ -47,7 +47,7 @@
                                         </li>
                                     </ul>
                                 {% elseif notification.type == 'commentaire.reponse' %}
-                                    <h5>{{ notification.commentaire.enseignant.prenom }} {{ notification.commentaire.enseignant.nom }}
+                                    <h5>{{ notification.commentaire.enseignant ? notification.commentaire.enseignant.prenom ~ ' ' ~ notification.commentaire.enseignant.nom : 'Administrateur' }}
                                         à répondu à votre commentaire
                                         {% if notification.commentaire.portfolio != null %}
                                             sur le portfolio : {{ notification.commentaire.portfolio.intitule }}
@@ -80,7 +80,7 @@
                                 <div class="card" style="margin-bottom: 20px">
                                     <div class="card-header">
                                         <div>
-                                            <h6 class="card-subtitle">{{ notification.commentaire.enseignant.prenom }} {{ notification.commentaire.enseignant.nom }}</h6>
+                                            <h6 class="card-subtitle">{{ notification.commentaire.enseignant ? notification.commentaire.enseignant.prenom ~ ' ' ~ notification.commentaire.enseignant.nom : 'Administrateur' }}</h6>
                                             <small>
                                                 {{ notification.commentaire.datecreation|date('d-m-Y H:i') }}
                                             </small>
@@ -94,7 +94,7 @@
                                 <div class="card" style="margin-bottom: 20px">
                                     <div class="card-header">
                                         <div>
-                                            <h6 class="card-subtitle">{{ commentaire_parent.enseignant.prenom }} {{ commentaire_parent.enseignant.nom }}</h6>
+                                            <h6 class="card-subtitle">{{ commentaire_parent.enseignant ? commentaire_parent.enseignant.prenom ~ ' ' ~ commentaire_parent.enseignant.nom : 'Administrateur' }}</h6>
                                             <small>
                                                 {{ commentaire_parent.datecreation|date('d-m-Y H:i') }}
                                             </small>
@@ -107,7 +107,7 @@
                                     <div style="padding: 10px 25px; border-top: solid 1px lightgrey; background-color: #21252908">
                                         <div>
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <h6 class="card-subtitle">{{ notification.commentaire.enseignant.prenom }} {{ notification.commentaire.enseignant.nom }}</h6>
+                                                <h6 class="card-subtitle">{{ notification.commentaire.enseignant ? notification.commentaire.enseignant.prenom ~ ' ' ~ notification.commentaire.enseignant.nom : 'Administrateur' }}</h6>
                                             </div>
                                             <small class="text-muted">{{ notification.commentaire.datecreation|date('d-m-Y H:i') }}</small>
                                             <small>·</small>
@@ -148,7 +148,7 @@
                                         <p>En attente de notification.validation</p>
                                     {% else %}
                                         <p style="text-align: end">Evaluation saisie
-                                            par {{ notification.validation.enseignant.prenom }} {{ notification.validation.enseignant.nom }}
+                                            par {{ notification.validation.enseignant ? notification.validation.enseignant.prenom ~ ' ' ~ notification.validation.enseignant.nom : 'un administrateur' }}
                                             le {{ notification.validation.dateModification|date('d-m-y') }}</p>
                                     {% endif %}
                                 </ul>

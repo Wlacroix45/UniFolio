@@ -87,7 +87,7 @@
 
                         </div>
 
-                        {{ trace.description|raw }}
+                        {{ trace.description|default('')|sanitize_html('texte_etudiant') }}
                     </div>
                     <hr>
                 {% endfor %}

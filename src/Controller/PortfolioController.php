@@ -82,6 +82,10 @@ class PortfolioController extends BaseController
         $user = $this->security->getUser();
         $portfolio = $portfolioRepository->findOneBy(['id' => $id]);
 
+        if ($portfolio === null || !$this->isGranted(DepartementVoter::VIEW, $portfolio)) {
+            return $this->render('security/accessDenied.html.twig');
+        }
+
         $notificationId = $request->query->get('notification_id');
 
         if ($notificationId) {
@@ -93,11 +97,21 @@ class PortfolioController extends BaseController
         }
 
 
+        if (
+            $request->isMethod('GET')
+            && $user->getEtudiant() === null
+            && $portfolio->isVisibilite()
+            && $this->isGranted(DepartementVoter::EVALUATE, $portfolio)
+        ) {
+            return $this->redirectToRoute('app_evaluation_portfolio', ['id' => $portfolio->getId()]);
+        }
+
         if ($this->security->getUser()->getEnseignant()) {
             $enseignant = $this->security->getUser()->getEnseignant();
 
             //si un form en post est envoyé
             if ($_POST) {
+                $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $portfolio);
                 $data = $_POST;
                 // vérifier que le form est un form de type CommentaireType
                 if (isset($data['commentaire'])) {
@@ -114,9 +128,11 @@ class PortfolioController extends BaseController
                         $commentaire->setDateModification(new \DateTime());
                         if (isset($_POST['traceId'])) {
                             $trace = $traceRepository->find($_POST['traceId']);
+                            $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
                             $commentaire->setTrace($trace);
                         } elseif (isset($_POST['portfolioId'])) {
                             $portfolio = $portfolioRepository->find($_POST['portfolioId']);
+                            $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $portfolio);
                             $commentaire->setPortfolio($portfolio);
                         }
 
@@ -283,6 +299,10 @@ class PortfolioController extends BaseController
     ): Response {
         $portfolio = $portfolioRepository->findOneBy(['id' => $id]);
 
+        if ($portfolio === null || !$this->isGranted(DepartementVoter::VIEW, $portfolio)) {
+            return $this->render('security/accessDenied.html.twig');
+        }
+
         return $this->render('portfolio/old_show.html.twig', [
             'portfolio' => $portfolio,
         ]);
@@ -392,6 +412,13 @@ class PortfolioController extends BaseController
         if ($this->isGranted('ROLE_ENSEIGNANT')) {
             $commentaireId = $request->get('id');
             $commentaire = $commentaireRepository->find($commentaireId);
+            if ($commentaire === null) {
+                throw $this->createNotFoundException('Commentaire introuvable.');
+            }
+            $this->denyAccessUnlessGranted(
+                DepartementVoter::EVALUATE,
+                $commentaire->getPortfolio() ?? $commentaire->getTrace()
+            );
             $commentaireRepository->remove($commentaire, true);
 
             $this->addFlash('success', 'Commentaire supprimé avec succès !');

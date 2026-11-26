@@ -16,6 +16,9 @@ use App\Repository\CommentaireRepository;
 use App\Repository\TraceRepository;
 use App\Repository\ValidationRepository;
 use App\Security\Voter\DepartementVoter;
+use App\Service\EvaluationPortfolio;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
+use Symfony\UX\TwigComponent\Attribute\PostMount;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -64,7 +67,8 @@ class AbstractTraceEvalComponent extends BaseController
         protected ValidationRepository $validationRepository,
         protected CommentaireRepository $commentaireRepository,
         #[Required] public Security $security,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        protected EvaluationPortfolio $evaluationPortfolio
     ) {
 //        $this->Trace = $this->getTrace();
 
@@ -85,6 +89,15 @@ class AbstractTraceEvalComponent extends BaseController
         $state = intval($state);
 
         $validation = $this->validationRepository->find($validationId);
+        if ($validation === null || $validation->getTrace()?->getId() !== $trace->getId()) {
+            throw $this->createAccessDeniedException('Cette validation n\'appartient pas à la trace.');
+        }
+        if ($this->evaluationPortfolio->isTraceVerrouillee($trace)) {
+            throw $this->createAccessDeniedException('L\'évaluation de ce portfolio est validée.');
+        }
+        if (!isset(EvaluationPortfolio::NIVEAUX[$state])) {
+            return;
+        }
 
         // Mettre à jour le validation dans la base de données
         $validation->setEtat($state);
@@ -148,6 +161,9 @@ class AbstractTraceEvalComponent extends BaseController
         $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
 
         $commentParent = $this->commentaireRepository->find($commentParent);
+        if ($commentParent === null || $commentParent->getTrace()?->getId() !== $trace->getId()) {
+            throw $this->createAccessDeniedException('Ce commentaire n\'appartient pas à la trace.');
+        }
 
         if ($this->commentVisibility == 'true') {
             $this->commentVisibility = true;
@@ -182,6 +198,9 @@ class AbstractTraceEvalComponent extends BaseController
         $this->denyAccessUnlessGranted(DepartementVoter::EVALUATE, $trace);
 
         $comment = $this->commentaireRepository->find($commentId);
+        if ($comment === null || $comment->getTrace()?->getId() !== $trace->getId()) {
+            throw $this->createAccessDeniedException('Ce commentaire n\'appartient pas à la trace.');
+        }
         $this->commentaireRepository->remove($comment, true);
         $commentairesEnfants = $this->commentaireRepository->findBy(['commentaire_parent' => $commentId]);
         if ($commentairesEnfants) {
@@ -190,6 +209,18 @@ class AbstractTraceEvalComponent extends BaseController
             }
         }
     }
+    #[PostMount]
+    #[PostHydrate]
+    public function controlerAcces(): void
+    {
+        $this->denyAccessUnlessGranted(DepartementVoter::VIEW, $this->getTrace());
+    }
+
+    public function isVerrouillee(): bool
+    {
+        return $this->evaluationPortfolio->isTraceVerrouillee($this->getTrace());
+    }
+
     public function getTrace(): ?Trace
     {
         if ($this->id === null) {

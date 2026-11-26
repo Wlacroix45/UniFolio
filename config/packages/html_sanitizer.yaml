@@ -1,0 +1,13 @@
+framework:
+    html_sanitizer:
+        sanitizers:
+            texte_etudiant:
+                allow_safe_elements: true
+                allow_relative_links: true
+                allow_relative_medias: true
+                allowed_link_schemes: ['http', 'https']
+                max_input_length: -1
+                force_attributes:
+                    a:
+                        target: _blank
+                        rel: noopener noreferrer

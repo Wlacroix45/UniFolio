@@ -53,6 +53,6 @@ class BaseController extends AbstractController
 
     public function getEnseignant(): ?Enseignant
     {
-        return $this->dataUserSession->getUser();
+        return $this->dataUserSession->getEnseignant();
     }
 }

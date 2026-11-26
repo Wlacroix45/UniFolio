@@ -76,7 +76,7 @@ class TraceRepository extends ServiceEntityRepository
         return $qb;
     }
 
-    private function createFiltersQb($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, ?int $annee = null)
+    private function createFiltersQb($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, ?int $annee = null, array $semestres = [])
     {
         $qb = $this->createQueryBuilder('t')
             ->innerJoin('t.validations', 'v')
@@ -119,6 +119,16 @@ class TraceRepository extends ServiceEntityRepository
                 ->andWhere('p.visibilite = true')
                 ->setParameter('annee', $annee);
         }
+        if (!empty($semestres)) {
+            $qb->andWhere('s.id IN (:semestres)')
+                ->setParameter('semestres', $semestres)
+                ->innerJoin('t.ordreTrace', 'ot')
+                ->innerJoin('ot.page', 'pa')
+                ->innerJoin('pa.ordrePage', 'op')
+                ->innerJoin('op.portfolio', 'p')
+                ->andWhere('p.annee = a')
+                ->andWhere('p.visibilite = true');
+        }
         if (!empty($competences)) {
             $qb->andWhere('c.id IN (:competences)')
                 ->setParameter('competences', $competences);
@@ -135,17 +145,17 @@ class TraceRepository extends ServiceEntityRepository
         return $qb;
     }
 
-    public function countByFilters($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, ?int $annee = null): int
+    public function countByFilters($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, ?int $annee = null, array $semestres = []): int
     {
-        $qb = $this->createFiltersQb($dept, $semestre, $competences, $groupes, $etudiants, $etat, $annee)
+        $qb = $this->createFiltersQb($dept, $semestre, $competences, $groupes, $etudiants, $etat, $annee, $semestres)
             ->select('COUNT(DISTINCT t.id)');
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    public function findIdsByFilters($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, int $limit = 20, int $offset = 0, ?int $annee = null): array
+    public function findIdsByFilters($dept, ?Semestre $semestre = null, array $competences = [], array $groupes = [], array $etudiants = [], ?int $etat = null, int $limit = 20, int $offset = 0, ?int $annee = null, array $semestres = []): array
     {
-        $rows = $this->createFiltersQb($dept, $semestre, $competences, $groupes, $etudiants, $etat, $annee)
+        $rows = $this->createFiltersQb($dept, $semestre, $competences, $groupes, $etudiants, $etat, $annee, $semestres)
             ->select('DISTINCT t.id AS id')
             ->addSelect('t.date_modification')
             ->orderBy('t.date_modification', 'DESC')

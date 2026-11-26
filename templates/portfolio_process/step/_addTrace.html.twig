@@ -25,7 +25,7 @@
                     {% if validation.etat == 0 %}
                         <p>En attente de validation</p>
                     {% else %}
-                        <p>Evaluation saisie par {{ validation.enseignant.prenom }} {{ validation.enseignant.nom }}
+                        <p>Evaluation saisie par {{ validation.enseignant ? validation.enseignant.prenom ~ ' ' ~ validation.enseignant.nom : 'un administrateur' }}
                             le {{ validation.dateModification|date('d-m-y') }}</p>
                     {% endif %}
                 {% endfor %}
@@ -137,7 +137,7 @@
                     {% endif %}
 
                     <div>
-                        {{ trace.description|raw }}
+                        {{ trace.description|default('')|sanitize_html('texte_etudiant') }}
                     </div>
 
                     <ul class="portfolio-competences">
@@ -162,7 +162,7 @@
                                 <p>En attente de validation</p>
                             {% else %}
                                 <p>Evaluation saisie
-                                    par {{ validation.enseignant.prenom }} {{ validation.enseignant.nom }}
+                                    par {{ validation.enseignant ? validation.enseignant.prenom ~ ' ' ~ validation.enseignant.nom : 'un administrateur' }}
                                     le {{ validation.dateModification|date('d-m-y') }}</p>
                             {% endif %}
                         {% endfor %}

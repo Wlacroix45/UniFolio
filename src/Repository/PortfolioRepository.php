@@ -7,9 +7,14 @@
  */
 namespace App\Repository;
 
+use App\Entity\ApcNiveau;
+use App\Entity\Departement;
+use App\Entity\Etudiant;
 use App\Entity\Portfolio;
-use App\Entity\Semestre;
+use App\Entity\Validation;
+use App\Enum\EvaluationStatutEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -45,147 +50,124 @@ class PortfolioRepository extends ServiceEntityRepository
         }
     }
 
-    private function createFiltersQb($dept, ?Semestre $semestre = null, array $groupes = [], array $etudiants = [], array $competences = [], ?int $etat = null)
+    private function createEvaluationQb(Departement $departement, EvaluationStatutEnum $statut, array $filtres): QueryBuilder
     {
         $qb = $this->createQueryBuilder('p')
-            ->innerJoin('p.ordrePages', 'op')
-            ->innerJoin('op.page', 'pa')
-            ->innerJoin('pa.ordreTraces', 'ot')
-            ->innerJoin('ot.trace', 't')
-            ->innerJoin('t.validations', 'v')
-            ->innerJoin('v.apcNiveau', 'c')
             ->innerJoin('p.etudiant', 'e')
-            ->innerJoin('e.groupe', 'g')
             ->innerJoin('e.semestre', 's')
             ->innerJoin('s.annee', 'a')
             ->innerJoin('a.diplome', 'd')
-            ->innerJoin('d.departement', 'dep')
-            ->where('dep.id = :departement')
+            ->where('d.departement = :departement')
             ->andWhere('p.visibilite = true')
-            ->setParameter('departement', $dept);
-        if ($etat !== null) {
-            switch ($etat) {
-                case 0: // Tous les portfolios
-                    break;
-                case 1: // Portfolios évalués
-                    $portfolios = $qb->getQuery()->getResult();  //Obtenir tous les portfolios
-                    $evaluatedPortfolios = [];
+            ->setParameter('departement', $departement);
 
-                    foreach ($portfolios as $portfolio) {
-                        $totalValidations = 0;
-                        $totalEval = 0;
+        $demarree = 'EXISTS (SELECT 1 FROM ' . Validation::class . ' vd'
+            . ' JOIN vd.trace td JOIN td.ordreTrace otd JOIN otd.page pad JOIN pad.ordrePage opd'
+            . ' WHERE opd.portfolio = p AND vd.etat <> 0)';
 
-                        foreach ($portfolio->getOrdrePages() as $op) {
-                            foreach ($op->getPage()->getOrdreTraces() as $ot) {
-                                foreach ($ot->getTrace()->getValidations() as $validation) {
-                                    $totalValidations++;
-                                    if ($validation->isEtat() != 0) {
-                                        $totalEval++;
-                                    }
-                                }
-                            }
-                        }
+        match ($statut) {
+            EvaluationStatutEnum::A_EVALUER => $qb
+                ->andWhere('p.dateValidationEvaluation IS NULL')
+                ->andWhere('p.dateBrouillonEvaluation IS NULL')
+                ->andWhere('NOT ' . $demarree),
+            EvaluationStatutEnum::EN_COURS => $qb
+                ->andWhere('p.dateValidationEvaluation IS NULL')
+                ->andWhere('p.dateBrouillonEvaluation IS NOT NULL OR ' . $demarree),
+            EvaluationStatutEnum::EVALUE => $qb
+                ->andWhere('p.dateValidationEvaluation IS NOT NULL'),
+        };
 
-                        //Si toutes les validations sont évaluées, ajouter le portfolio à la liste
-                        if ($totalValidations == $totalEval) {
-                            $evaluatedPortfolios[] = $portfolio;
-                        }
-                    }
-                    return $evaluatedPortfolios;
-                case 2: // Portfolios non évalués
-                    $qb->andWhere('v.etat = 0');
-                    break;
-            }
-        }
-        if (!empty($semestre)) {
+        if (!empty($filtres['semestre'])) {
             $qb->andWhere('s.id = :semestre')
-                ->setParameter('semestre', $semestre->getId());
-
-            $annee = $semestre->getAnnee();
-            if ($annee !== null) {
-                $qb->andWhere('p.annee = :annee')
-                    ->setParameter('annee', $annee);
-            }
+                ->andWhere('p.annee = s.annee')
+                ->setParameter('semestre', $filtres['semestre']);
         }
-        if (!empty($groupes)) {
-            $qb->andWhere('g.id IN (:groupes)')
-                ->setParameter('groupes', $groupes);
+        if (!empty($filtres['groupe'])) {
+            $qb->andWhere(':groupe MEMBER OF e.groupe')
+                ->setParameter('groupe', $filtres['groupe']);
         }
-        if (!empty($competences)) {
-            $qb->andWhere('c.id IN (:competences)')
-                ->setParameter('competences', $competences);
+        if (!empty($filtres['etudiant'])) {
+            $qb->andWhere('e.id = :etudiant')
+                ->setParameter('etudiant', $filtres['etudiant']);
         }
-        if (!empty($etudiants)) {
-            $qb->andWhere('e.id IN (:etudiants)')
-                ->setParameter('etudiants', $etudiants);
+        if (!empty($filtres['niveau'])) {
+            $qb->andWhere('EXISTS (SELECT 1 FROM ' . Validation::class . ' vn'
+                . ' JOIN vn.trace tn JOIN tn.ordreTrace otn JOIN otn.page pan JOIN pan.ordrePage opn'
+                . ' WHERE opn.portfolio = p AND vn.apcNiveau = :niveau)')
+                ->setParameter('niveau', $filtres['niveau']);
         }
 
         return $qb;
     }
 
-    public function countByFilters($dept, ?Semestre $semestre = null, array $groupes = [], array $etudiants = [], array $competences = [], ?int $etat = null): int
+    public function countForEvaluation(Departement $departement, EvaluationStatutEnum $statut, array $filtres = []): int
     {
-        $qb = $this->createFiltersQb($dept, $semestre, $groupes, $etudiants, $competences, $etat);
-        if (is_array($qb)) {
-            return count($qb);
-        }
-
-        return (int) $qb
-            ->select('COUNT(DISTINCT p.id)')
+        return (int) $this->createEvaluationQb($departement, $statut, $filtres)
+            ->select('COUNT(p.id)')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
-    public function findIdsByFilters($dept, ?Semestre $semestre = null, array $groupes = [], array $etudiants = [], array $competences = [], ?int $etat = null, int $limit = 20, int $offset = 0): array
-    {
-        $qb = $this->createFiltersQb($dept, $semestre, $groupes, $etudiants, $competences, $etat);
-        if (is_array($qb)) {
-            $slice = array_slice($qb, $offset, $limit);
-            return array_map(static fn (Portfolio $portfolio) => (int) $portfolio->getId(), $slice);
-        }
-
-        $rows = $qb
-            ->select('DISTINCT p.id AS id')
-            ->addSelect('p.date_modification')
+    public function findForEvaluation(
+        Departement $departement,
+        EvaluationStatutEnum $statut,
+        array $filtres = [],
+        int $limit = 20,
+        int $offset = 0
+    ): array {
+        return $this->createEvaluationQb($departement, $statut, $filtres)
+            ->addSelect('e', 's', 'a')
             ->orderBy('p.date_modification', 'ASC')
+            ->addOrderBy('p.id', 'ASC')
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()
-            ->getArrayResult();
-
-        return array_map(static fn (array $row) => (int) $row['id'], $rows);
+            ->getResult();
     }
 
-    public function findByFilters($dept, ?Semestre $semestre = null, array $groupes = [], array $etudiants = [], array $competences = [], ?int $etat = null): array
+    public function findProgression(array $ids): array
     {
-        $qb = $this->createFiltersQb($dept, $semestre, $groupes, $etudiants, $competences, $etat);
-        if (is_array($qb)) {
-            return $qb;
+        if ($ids === []) {
+            return [];
         }
 
-        $qb->distinct('p.id');
+        $rows = $this->getEntityManager()->createQuery(
+            'SELECT IDENTITY(op.portfolio) AS id, COUNT(v.id) AS total,'
+            . ' SUM(CASE WHEN v.etat <> 0 THEN 1 ELSE 0 END) AS evaluees'
+            . ' FROM ' . Validation::class . ' v'
+            . ' JOIN v.trace t JOIN t.ordreTrace ot JOIN ot.page pa JOIN pa.ordrePage op'
+            . ' WHERE op.portfolio IN (:ids)'
+            . ' GROUP BY op.portfolio'
+        )->setParameter('ids', $ids)->getArrayResult();
 
-        return $qb->getQuery()->getResult();
+        $progression = [];
+        foreach ($rows as $row) {
+            $progression[(int) $row['id']] = ['total' => (int) $row['total'], 'evaluees' => (int) $row['evaluees']];
+        }
+
+        return $progression;
     }
 
-    public function findOneForEvaluationCard(int $id): ?Portfolio
+    public function findEtudiantsAvecPortfolio(Departement $departement): array
     {
-        return $this->createQueryBuilder('p')
-            ->leftJoin('p.etudiant', 'e')->addSelect('e')
-            ->leftJoin('e.groupe', 'g')->addSelect('g')
-            ->leftJoin('g.type_groupe', 'tg')->addSelect('tg')
-            ->leftJoin('e.semestre', 's')->addSelect('s')
-            ->leftJoin('p.ordrePages', 'op')->addSelect('op')
-            ->leftJoin('op.page', 'pa')->addSelect('pa')
-            ->leftJoin('pa.ordreTraces', 'ot')->addSelect('ot')
-            ->leftJoin('ot.trace', 't')->addSelect('t')
-            ->leftJoin('t.validations', 'v')->addSelect('v')
-            ->leftJoin('v.apcNiveau', 'n')->addSelect('n')
-            ->leftJoin('n.competences', 'c')->addSelect('c')
-            ->andWhere('p.id = :id')
-            ->setParameter('id', $id)
-            ->getQuery()
-            ->getOneOrNullResult();
+        return $this->getEntityManager()->createQuery(
+            'SELECT e FROM ' . Etudiant::class . ' e'
+            . ' JOIN e.semestre s JOIN s.annee a JOIN a.diplome d'
+            . ' WHERE d.departement = :departement'
+            . ' AND EXISTS (SELECT 1 FROM ' . Portfolio::class . ' p WHERE p.etudiant = e AND p.visibilite = true)'
+            . ' ORDER BY e.nom ASC, e.prenom ASC'
+        )->setParameter('departement', $departement)->getResult();
+    }
+
+    public function findNiveauxRevendiques(Departement $departement): array
+    {
+        return $this->getEntityManager()->createQuery(
+            'SELECT n FROM ' . ApcNiveau::class . ' n WHERE EXISTS ('
+            . 'SELECT 1 FROM ' . Validation::class . ' v JOIN v.trace t JOIN t.bibliotheque b'
+            . ' JOIN b.etudiant e JOIN e.semestre s JOIN s.annee a JOIN a.diplome d'
+            . ' WHERE v.apcNiveau = n AND d.departement = :departement'
+            . ') ORDER BY n.libelle ASC'
+        )->setParameter('departement', $departement)->getResult();
     }
 
 

@@ -379,12 +379,6 @@ parameters:
 			path: src/Twig/Components/AllEtudiantComponent.php
 
 		-
-			message: '#^Access to an undefined property App\\Twig\\Components\\AllEtudiantComponent\:\:\$semestres\.$#'
-			identifier: property.notFound
-			count: 6
-			path: src/Twig/Components/AllEtudiantComponent.php
-
-		-
 			message: '#^Access to an undefined property App\\Twig\\Components\\PortfolioEvalTableComponent\:\:\$portfolio\.$#'
 			identifier: property.notFound
 			count: 1

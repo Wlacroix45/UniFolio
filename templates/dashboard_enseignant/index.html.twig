@@ -14,18 +14,16 @@
                 <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
             </ol>
         </nav>
-        <section class="dashboard-eval-traces">
-            <article class="row g-4"><h1>Traces</h1>
-                <em>Toutes les traces des étudiants du département, développez pour évaluer</em>
-                {{ component('AllTraceEvalComponent') }}
-            </article>
+        <section class="ev">
+            <h1 class="ev-titre">Portfolios</h1>
+            <p class="ev-chapo">
+                {% if data_user.departement %}{{ data_user.departement.libelle }} · {% endif %}portfolios publiés par les étudiants
+            </p>
+            {{ component('AllPortfolioEvalComponent') }}
         </section>
-        <hr>
-        <section class="dashboard-eval-traces">
-            <article class="row g-4"><h1>Portfolios</h1>
-                <em>Tous les portfolios des étudiants du département, développez pour évaluer</em>
-                {{ component('AllPortfolioEvalComponent') }}
-            </article>
+        <hr class="tr-separateur">
+        <section class="ev tr-suivi">
+            {{ component('AllTraceEvalComponent') }}
         </section>
     </div>
 {% endblock %}

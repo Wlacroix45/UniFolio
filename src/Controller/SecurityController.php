@@ -9,6 +9,7 @@ namespace App\Controller;
 
 use App\Classes\DataUserSession;
 use App\Entity\Enseignant;
+use App\Repository\DepartementRepository;
 use App\Repository\EnseignantDepartementRepository;
 use App\Repository\EnseignantRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,6 +42,7 @@ class SecurityController extends AbstractController
         EnseignantRepository $enseignantRepository,
         RequestStack $session,
         EntityManagerInterface $entityManager,
+        DepartementRepository $departementRepository,
     ): Response {
         if (!$this->isGranted('ROLE_ENSEIGNANT')) {
             return $this->render('security/accessDenied.html.twig');
@@ -52,6 +54,20 @@ class SecurityController extends AbstractController
         }
 
         $enseignant = $enseignantRepository->findOneBy(['username' => $user->getUserIdentifier()]);
+
+        if (!$enseignant && $this->isGranted('ROLE_ADMIN')) {
+            if ($request->isMethod('POST')) {
+                $departement = $departementRepository->find((int) $request->request->get('departement'));
+                if ($departement !== null) {
+                    $session->getSession()->set('departement', $departement->getId());
+                    $this->dataUserSession->setDepartement($departement);
+                    $this->addFlash('success', sprintf('Département actif : %s', $departement->getLibelle()));
+                }
+            }
+
+            return $this->redirectToRoute('enseignant_dashboard');
+        }
+
         if (!$enseignant) {
             return $this->redirectToRoute('app_login', [
                 'message' => 'Vous devez être intervenant ou enseignant pour accéder à cette page.',
