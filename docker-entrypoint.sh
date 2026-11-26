@@ -33,8 +33,26 @@ fi
 
 #init bd
 echo "==> Initialisation de la base de données Symfony..."
-php bin/console doctrine:database:create --if-not-exists --no-interaction || true
-php bin/console doctrine:schema:update --force --no-interaction || true
+php bin/console doctrine:database:create --if-not-exists --no-interaction
+php bin/console doctrine:migrations:sync-metadata-storage --no-interaction
+
+NB_TABLES=$(php -r '
+    $p = parse_url(getenv("DATABASE_URL"));
+    $pdo = new PDO(sprintf("mysql:host=%s;port=%d;dbname=%s", $p["host"], $p["port"] ?? 3306, ltrim($p["path"], "/")), $p["user"] ?? "root", $p["pass"] ?? "");
+    echo $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name <> \"doctrine_migration_versions\"")->fetchColumn();
+')
+
+if [ "$NB_TABLES" = "0" ]; then
+    # si base vide
+    echo "==> Base vide : création du schéma..."
+    php bin/console doctrine:schema:create --no-interaction
+    php bin/console doctrine:migrations:version --add --all --no-interaction
+else
+    # si base existante
+    echo "==> Base existante : application des migrations..."
+    php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+fi
+
 php bin/console doctrine:fixtures:load -n || true
 
 #installation des assets Symfony

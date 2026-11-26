@@ -37,7 +37,7 @@ COPY --from=node:24-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/nod
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 	&& ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 RUN curl -sS https://get.symfony.com/cli/installer | bash \
-	&& mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
+	&& mv /root/.config/symfony-cli/bin/symfony /usr/local/bin/symfony
 
 WORKDIR /var/www/html
 
