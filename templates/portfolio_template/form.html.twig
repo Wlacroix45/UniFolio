@@ -1,0 +1,165 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    UniFolio - {{ isEdit ? 'Modifier le modèle' : 'Nouveau modèle de portfolio' }}
+{% endblock %}
+
+{% macro section_card(sectionForm) %}
+    <div class="card mb-3 section-item shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <span class="fw-semibold section-title-label">Section</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        title="Monter"
+                        aria-label="Monter la section"
+                        data-action="click->portfolio-template-sections#moveUp">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        title="Descendre"
+                        aria-label="Descendre la section"
+                        data-action="click->portfolio-template-sections#moveDown">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </button>
+                <button type="button"
+                        class="btn btn-outline-danger"
+                        title="Supprimer"
+                        aria-label="Supprimer la section"
+                        data-action="click->portfolio-template-sections#remove">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    {{ form_row(sectionForm.ordre) }}
+                </div>
+                <div class="col-md-10">
+                    {{ form_row(sectionForm.titre) }}
+                </div>
+                <div class="col-12">
+                    {{ form_row(sectionForm.consigne) }}
+                </div>
+                <div class="col-12">
+                    {{ form_row(sectionForm.questionReflexivePrompt) }}
+                </div>
+                <div class="col-12">
+                    {{ form_row(sectionForm.competencesCibles) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% import _self as macros %}
+
+{% block body %}
+    <div class="content-container">
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Tableau de bord</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_portfolio_template_index') }}">Modèles de portfolio</a>
+                </li>
+                {% if isEdit and template.id %}
+                    <li class="breadcrumb-item">
+                        <a href="{{ path('app_portfolio_template_show', {'id': template.id}) }}">{{ template.nom }}</a>
+                    </li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">
+                    {{ isEdit ? 'Modifier' : 'Nouveau modèle' }}
+                </li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">{{ isEdit ? 'Modifier le modèle de portfolio' : 'Créer un modèle de portfolio' }}</h1>
+                {% if departement %}
+                    <p class="text-muted mb-0">Département : <strong>{{ departement.libelle }}</strong></p>
+                {% endif %}
+            </div>
+            {% if isEdit and template.statut %}
+                <span class="badge {{ template.statut.badgeClass }} fs-6">{{ template.statut.libelle }}</span>
+            {% endif %}
+        </div>
+
+        {% if isEdit and template.isPublished %}
+            <div class="alert alert-info">
+                Ce modèle est actuellement <strong>publié</strong>. Les modifications s'appliqueront uniquement aux
+                nouveaux portfolios démarrés par les étudiants ; les portfolios en cours conservent leur version initiale.
+            </div>
+        {% endif %}
+
+        {{ form_start(form) }}
+        {{ form_errors(form) }}
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+                <h2 class="h5 mb-0">Informations générales et cadrage PN</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        {{ form_row(form.nom) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form_row(form.description) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_row(form.apcReferentiel) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_row(form.annee) }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_row(form.apcParcours) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form_row(form.competencesCibles) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div data-controller="portfolio-template-sections"
+             data-portfolio-template-sections-prototype-value="{{ macros.section_card(form.sections.vars.prototype)|e('html_attr') }}"
+             data-portfolio-template-sections-index-value="{{ form.sections|length }}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h4 mb-0">Sections du portfolio guidé</h2>
+                    <small class="text-muted">Définissez les étapes ordonnées et les consignes pour l'étudiant.</small>
+                </div>
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        data-action="click->portfolio-template-sections#add">
+                    <i class="fa-solid fa-plus me-1"></i> Ajouter une section
+                </button>
+            </div>
+
+            <div id="sections-container" data-portfolio-template-sections-target="container">
+                {% for sectionForm in form.sections %}
+                    {{ macros.section_card(sectionForm) }}
+                {% endfor %}
+            </div>
+        </div>
+
+        {% do form.sections.setRendered() %}
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk me-1"></i>
+                {{ isEdit ? 'Enregistrer les modifications' : 'Créer le brouillon' }}
+            </button>
+            <a href="{{ isEdit and template.id ? path('app_portfolio_template_show', {'id': template.id}) : path('app_portfolio_template_index') }}"
+               class="btn btn-outline-secondary">
+                Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

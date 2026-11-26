@@ -9,6 +9,7 @@ use App\Entity\Departement;
 use App\Entity\Diplome;
 use App\Entity\Etudiant;
 use App\Entity\Portfolio;
+use App\Entity\PortfolioTemplate;
 use App\Entity\Semestre;
 use App\Entity\Trace;
 use App\Entity\Users;
@@ -43,6 +44,7 @@ class DepartementVoter extends Voter
         return $subject === null
             || $subject instanceof Departement
             || $subject instanceof Portfolio
+            || $subject instanceof PortfolioTemplate
             || $subject instanceof Trace
             || $subject instanceof Etudiant
             || $subject instanceof Diplome
@@ -135,6 +137,10 @@ class DepartementVoter extends Voter
         }
 
         if ($subject instanceof ApcReferentiel) {
+            return $subject->getDepartement();
+        }
+
+        if ($subject instanceof PortfolioTemplate) {
             return $subject->getDepartement();
         }
 
