@@ -9,6 +9,8 @@
 namespace App\Twig\Components;
 
 use App\Classes\DataUserSession;
+use App\Security\Voter\DepartementVoter;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use App\Controller\BaseController;
 use App\Entity\ApcNiveau;
 use App\Entity\Etudiant;
@@ -45,8 +47,6 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 
-use function PHPUnit\Framework\isEmpty;
-
 #[AsLiveComponent('AllEtudiantComponent')]
 class AllEtudiantComponent extends BaseController
 {
@@ -54,6 +54,7 @@ class AllEtudiantComponent extends BaseController
 
     public array $semestre = [];
     public array $annee = [];
+    public array $semestres = [];
     public array $dept = [];
     public int $validation = 0;
 
@@ -62,11 +63,11 @@ class AllEtudiantComponent extends BaseController
     #[LiveProp(writable: true)]
     public int $currentPage = 1; // Page actuelle (on commence à 1)
 
-    #[LiveProp(writable: true)]
+    #[LiveProp]
     /** @var Groupe[] */
     public array $groupes = [];
 
-    #[LiveProp(writable: true)]
+    #[LiveProp]
     public array $etudiantsNonInscrits = [];
 
     #[LiveProp(writable: true)]
@@ -95,11 +96,11 @@ class AllEtudiantComponent extends BaseController
     #[LiveProp(writable: true)]
     public ?int $selectedEtat = 2;
 
-    #[LiveProp(writable: true)]
+    #[LiveProp]
     /** @var ApcNiveau[] */
     public array $niveaux = [];
 
-    #[LiveProp(writable: true)]
+    #[LiveProp]
     /** @var Etudiant[] */
     public array $allEtudiants = [];
 
@@ -152,14 +153,52 @@ class AllEtudiantComponent extends BaseController
             }
             $this->dept[] = $departement;
         }
+        $this->memoriserPerimetre();
     }
+
+    private array $idsGroupesDepartement = [];
+    private array $idsEtudiantsDepartement = [];
+
+    #[PostMount]
+    #[PostHydrate]
+    public function controlerAcces(): void
+    {
+        $departement = $this->dataUserSession->getDepartement();
+        if ($departement !== null) {
+            $this->denyAccessUnlessGranted(DepartementVoter::VIEW, $departement);
+        }
+    }
+
+    private function dansLeDepartement(array $ids, array $autorises): array
+    {
+        return array_values(array_intersect(array_map('intval', $ids), $autorises));
+    }
+
+    private function semestreDuDepartement(?int $id): ?Semestre
+    {
+        foreach ($this->semestres as $semestre) {
+            if ($semestre->getId() === $id) {
+                return $semestre;
+            }
+        }
+
+        return null;
+    }
+
+    private function memoriserPerimetre(): void
+    {
+        $ids = static fn (array $entites) => array_map(static fn ($e) => (int) $e->getId(), $entites);
+        foreach ($this->semestres as $semestre) {
+            array_push($this->idsGroupesDepartement, ...$ids($this->groupeRepository->findBySemestre($semestre)));
+            array_push($this->idsEtudiantsDepartement, ...$ids($this->etudiantRepository->findBySemestre($semestre)));
+        }
+    }
+
 
     // ✅ Résolution de l'entité depuis l'ID
     private function resolveSelectedSemestre(): void
     {
-        $this->selectedSemestre = $this->selectedSemestreId !== null
-            ? $this->semestreRepository->find($this->selectedSemestreId)
-            : null;
+        $this->selectedSemestre = $this->semestreDuDepartement($this->selectedSemestreId);
     }
 
     #[PostMount]
@@ -221,7 +260,7 @@ class AllEtudiantComponent extends BaseController
         $this->currentPage = 1;
 
         // ✅ On stocke l'ID, pas l'entité
-        $this->selectedSemestreId = $id !== 0 ? $id : null;
+        $this->selectedSemestreId = $this->semestreDuDepartement($id) !== null ? $id : null;
         $this->resolveSelectedSemestre();
 
         $activeDepartement = $this->dataUserSession->getDepartement();
@@ -229,11 +268,6 @@ class AllEtudiantComponent extends BaseController
         $competences = $referentiel !== null
             ? $this->competenceRepository->findBy(['referentiel' => $referentiel])
             : [];
-
-        //si un semestre est sélectionné
-        if ($id !== null) {
-            $this->selectedSemestre = $this->semestreRepository->find($id);
-        }
 
 
         $competencesNiveau = []; // Reset Competences Niveau array
@@ -316,7 +350,7 @@ class AllEtudiantComponent extends BaseController
         $this->currentPage = 1;
 
         // récupérer les étudiants des groupes sélectionnés
-        $groupes = $this->groupeRepository->findBy(['id' => $this->selectedGroupes]);
+        $groupes = $this->groupeRepository->findBy(['id' => $this->dansLeDepartement($this->selectedGroupes, $this->idsGroupesDepartement)]);
 
         $this->etudiants = [];
         $this->niveaux = [];
@@ -383,7 +417,7 @@ class AllEtudiantComponent extends BaseController
     {
         $this->currentPage = 1;
         // récupérer les groupes des étudiants sélectionnés
-        $etudiants = $this->etudiantRepository->findBy(['id' => $this->selectedEtudiants]);
+        $etudiants = $this->etudiantRepository->findBy(['id' => $this->dansLeDepartement($this->selectedEtudiants, $this->idsEtudiantsDepartement)]);
         $this->groupes = [];
         foreach ($etudiants as $etudiant) {
             if ($etudiant->getGroupe() !== null) {
